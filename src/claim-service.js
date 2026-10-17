@@ -334,6 +334,134 @@ export const SEEDED_CLAIMS = {
       ],
       duration: 6.5
     }
+  ],
+
+  // 三星堆文明突然消亡的謎底，與全球青銅文明的神秘集體消失 (文昭思緒飛揚)
+  TGUeqcBXy_A: [
+    {
+      timestamp: 55.0,
+      sentence: '「三星堆古蜀國文明在商周之際完全滅絕，所有居民與文化無影無蹤地蒸發消失。」',
+      verdict: 'misinformation',
+      explanation:
+        '現代田野考古證實：四川省文物考古研究院於成都市區發掘的金沙遺址與十二橋文化，在青銅器鑄造、玉器形制及黃金面具工藝上皆與三星堆呈現明確繼承關係，古蜀國重心係因河流改道或環境變遷遷徙至金沙，並非神秘蒸發。',
+      sources: [
+        'http://www.jinshasitemuseum.com/research/discovery',
+        'https://www.kaogu.cn/cn/kaoguxinwen/2021/0320/71120.html'
+      ],
+      duration: 6.5
+    },
+    {
+      timestamp: 160.0,
+      sentence: '「約在西元前 1200 年前後，東地中海與近東地區多個青銅文明經歷了劇烈的青銅時代晚期崩潰（Late Bronze Age Collapse）。」',
+      verdict: 'verified',
+      explanation:
+        '歷史學與古環境學界普遍公認：邁錫尼文明、西臺帝國、黎凡特諸城邦及埃及新王國在西元前 1200 年前後遭受乾旱、地震風暴、海上民族入侵及貿易網絡斷裂等多重危機衝擊，史稱「晚期青銅時代崩潰」。',
+      sources: [
+        'https://www.worldhistory.org/Bronze_Age_Collapse/',
+        'https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0071004'
+      ],
+      duration: 6.0
+    },
+    {
+      timestamp: 330.0,
+      sentence: '「三星堆與美索不達米亞及地中海青銅文明的衰落是由同一次全球性超自然災異引發。」',
+      verdict: 'unknown',
+      explanation:
+        '古氣候學雖偵測到約西元前4.2千年（4.2 ka event）及西元前3.2千年廣泛乾旱期，但三星堆祭祀坑填埋年代跨度自商晚期至西周早期（約前1200-前1000年），古蜀國與地中海相隔數千公里，其衰落因果關聯屬未有確切考古定論之假說。',
+      sources: [
+        'https://www.science.org/doi/10.1126/science.1186457',
+        'https://www.nature.com/articles/nature12431'
+      ],
+      duration: 7.0
+    },
+    {
+      timestamp: 520.0,
+      sentence: '「三星堆出土的青銅縱目面具與青銅神樹證明古蜀人屬於地外文明或外星混血族群。」',
+      verdict: 'misinformation',
+      explanation:
+        '考古發掘人骨古 DNA 測定與分子人類學研究表明，古蜀人群遺傳背景與黃河中上游古中原人群高度同源；縱目誇張造型係《華陽國志》記載古蜀始祖「蠶叢縱目」的神格化圖騰崇拜與祭祀禮器象徵，無外星人干預證據。',
+      sources: [
+        'https://www.cell.com/molecular-plant/fulltext/S1674-2052(20)30449-7',
+        'https://tfc-taiwan.org.tw/articles/sanxingdui-alien-myths'
+      ],
+      duration: 6.5
+    },
+    {
+      timestamp: 680.0,
+      sentence: '「三星堆遺址發掘出大量海貝與象牙，證明古蜀王國具備跨區域遠程貿易與文化交流網絡。」',
+      verdict: 'verified',
+      explanation:
+        '四川三星堆一至八號祭祀坑累計出土數千枚齒貝（印度洋貨貝）及數百根亞洲象牙，同位素分析證實古蜀國透過南方絲綢之路與南亞次大陸及中原商王朝保持活躍物資流通。',
+      sources: [
+        'https://www.kaogu.cn/cn/kaoguxinwen/2021/0910/72880.html',
+        'https://en.unesco.org/silkroad/content/sanxingdui-site'
+      ],
+      duration: 6.0
+    }
+  ],
+
+  // 《聖經》大洪水記載遺漏的起因補上了；實錘證據有了 (文昭思緒飛揚)
+  BSI8oxcQFfw: [
+    {
+      timestamp: 45.0,
+      sentence: '「全世界各大洲主要古代文明（美索不達米亞、美洲印第安、古印度及華夏）的神話文獻中均有毀滅性大洪水記憶。」',
+      verdict: 'verified',
+      explanation:
+        '比較神話學與民俗學研究（如詹姆斯·弗雷澤《舊約中的民俗》）證實：包括蘇美爾《吉爾伽美什史詩》、印度《百道梵書》摩奴救世、馬雅《波波爾·烏》及中國大禹治水等數百個神話均記錄了遠古洪水浩劫。',
+      sources: [
+        'https://www.britannica.com/topic/flood-myth',
+        'https://www.oxfordbibliographies.com/view/document/obo-9780195396577/obo-9780195396577-0130.xml'
+      ],
+      duration: 6.5
+    },
+    {
+      timestamp: 150.0,
+      sentence: '「《聖經·創世記》遺漏了大洪水起因，直到近現代死海古卷《以諾書》才補全巨人與墮落天使的完整因果。」',
+      verdict: 'unknown',
+      explanation:
+        '《創世記》第六章已提及「偉人（Nephilim）」與人道德敗壞；次經《以諾書》（1 Enoch）確在衣索比亞正統教會及昆蘭死海古卷中擴充守望者天使與巨人情節，但主流猶太教拉比與天主教/基督新教視其為偽經（Apocrypha/Pseudepigrapha），非正典遺漏。',
+      sources: [
+        'https://www.deadseascrolls.org.il/featured-scrolls/the-enoch-scrolls',
+        'https://bibleinterp.arizona.edu/articles/enoch-and-genesis'
+      ],
+      duration: 7.0
+    },
+    {
+      timestamp: 310.0,
+      sentence: '「地質學界已經找到完全覆蓋地球所有大陸與高山的單一全球性大洪水實錘地質證據。」',
+      verdict: 'misinformation',
+      explanation:
+        '地質學、沈積學及冰川學界透過全球岩層與南極/格陵蘭數十萬年冰芯鑽探證實：地質歷史上不存在同一時間點淹沒全球最高海拔的單一全球性大洪水；洪水傳說源自末次冰期結束後（約1.4萬-8000年前）各大陸海平面急升與黑海/波斯灣等區域性巨大海侵事件。',
+      sources: [
+        'https://www.geosociety.org/gsatoday/archive/22/6/article/i1052-5173-22-6-4.htm',
+        'https://www.talkorigins.org/faqs/fl-geology.html'
+      ],
+      duration: 7.5
+    },
+    {
+      timestamp: 500.0,
+      sentence: '「格陵蘭島海華沙冰川下發現的巨大隕石坑，證實了新仙女木時期（Younger Dryas）彗星撞擊引發全球浩劫。」',
+      verdict: 'misinformation',
+      explanation:
+        '2022 年丹麥自然歷史博物館與國際地質科研團隊在《Science Advances》發表最新放射性錀鋨定年分析：海華沙隕石坑（Hiawatha Impact Crater）形成於距今約 5800 萬年前的古新世，遠早於約 1.28 萬年前的新仙女木事件，無法作為人類時期大洪水假說的證據。',
+      sources: [
+        'https://www.science.org/doi/10.1126/sciadv.abm2434',
+        'https://www.nature.com/articles/d41586-022-00713-1'
+      ],
+      duration: 7.5
+    },
+    {
+      timestamp: 660.0,
+      sentence: '「黑海大洪水假說（Black Sea deluge hypothesis）認為地中海海水在約西元前5600年衝破博斯普魯斯海峽灌入黑海淡水湖。」',
+      verdict: 'verified',
+      explanation:
+        '哥倫比亞大學海洋地質學家威廉·萊恩（William Ryan）與瓦爾特·皮特曼（Walter Pitman）於 1997 年提出並由海洋沈積物與貝類碳14定年佐證，黑海在末次冰消期後經歷巨大突發性海水注入，為古代大洪水記憶的有力區域地質候選事件。',
+      sources: [
+        'https://www.sciencedirect.com/science/article/pii/S002532270300098X',
+        'https://www.smithsonianmag.com/science-nature/evidence-for-a-flood-102813110/'
+      ],
+      duration: 6.5
+    }
   ]
 };
 
