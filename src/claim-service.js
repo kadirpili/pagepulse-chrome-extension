@@ -273,6 +273,7 @@ export const SEEDED_CLAIMS = {
   ],
 
   // 我們真的需要核能嗎？：楊斯棓 at TEDxTaipei 2013
+  // 我們真的需要核能嗎？：楊斯棓 at TEDxTaipei 2013
   '7wFWgopJP5Q': [
     {
       timestamp: 45.0,
@@ -287,23 +288,11 @@ export const SEEDED_CLAIMS = {
       duration: 6.0
     },
     {
-      timestamp: 155.0,
-      sentence: '「世界上只有台灣把核電廠蓋在距離首都人口密集核心區三十公里範圍內。」',
-      verdict: 'misinformation',
-      explanation:
-        '查核比對國際原子能總署（IAEA）地理資料庫：包括加拿大皮克靈核電廠（Pickering，距多倫多約30公里）、南韓古里核電廠（距釜山約25公里）、羅馬尼亞切爾納沃德核電廠等，皆位於主要大都會或人口密集區30公里半徑內，台灣並非全球唯一特例。',
-      sources: [
-        'https://pris.iaea.org/pris/countrystatistics/countryoverview.aspx',
-        'https://npost.tw/archives/11270'
-      ],
-      duration: 6.5
-    },
-    {
       timestamp: 320.0,
       sentence: '「法國電力公司長年因核電廠龐大興建成本與維護負債累累，法國民眾民調已壓倒性反對核電。」',
       verdict: 'misinformation',
       explanation:
-        '法國電力公社（EDF）雖面臨財務與反應爐維修成本壓力，但法國國會與主流獨立民調（如 IFOP、Odoxa）常態顯示約 60% 至 75% 法國公民支持維持核能發電以保障國家低碳能源自主與電價穩定。',
+        '法國電力公社（EDF）雖面臨財務與反應爐維修成本壓力，但法國主流獨立民調（如 IFOP、Odoxa）常態顯示約 60% 至 75% 法國公民支持維持核能發電以保障國家低碳能源自主與電價穩定。',
       sources: [
         'https://www.world-nuclear-news.org/Articles/Poll-reveals-strong-support-for-nuclear-in-France',
         'https://www.iaea.org/bulletin/frances-nuclear-energy-future'
@@ -321,6 +310,18 @@ export const SEEDED_CLAIMS = {
         'https://www.iaea.org/newscenter/news/finlands-deep-geological-repository'
       ],
       duration: 6.0
+    },
+    {
+      timestamp: 574.0,
+      sentence: '「世界上只有台灣把核電廠蓋在距離首都人口密集核心區三十公里範圍內。」(09:34–09:39)',
+      verdict: 'misinformation',
+      explanation:
+        '瑞士米勒貝格核電廠（Mühleberg Nuclear Power Plant）距離首都伯恩（Bern）市中心僅約 14 公里，自 1972 年運轉至 2019 年底（此演講發表時仍在正式商轉中）。此外加拿大皮克靈核電廠距多倫多市中心約 30 公里，台灣並非全球唯一首都圈核電案例。',
+      sources: [
+        'https://www.bkw.ch/fileadmin/user_upload/03_Energie/03_05_Energieproduktion/Stilllegung_Kernkraftwerk_Muehleberg/Teilbericht_2_-_Umweltvertraeglichkeitsbericht_v1.0.pdf',
+        'https://pris.iaea.org/pris/countrystatistics/countryoverview.aspx?sysType=PRIS'
+      ],
+      duration: 7.0
     },
     {
       timestamp: 750.0,
@@ -387,7 +388,19 @@ export const SEEDED_CLAIMS = {
       duration: 6.5
     },
     {
-      timestamp: 680.0,
+      timestamp: 638.0,
+      sentence: '「銅礦石單獨冶煉出來就是黃銅，而青銅是用黃銅加上大約十分之一的錫混合製成的。」(10:38–10:50)',
+      verdict: 'misinformation',
+      explanation:
+        '冶金化學與材料科學基礎事實：天然純銅礦石冶煉得到的是純銅（紅銅）。黃銅（Brass）是銅與「鋅（Zinc）」的合金；而青銅（Bronze）是銅與「錫（Tin）」的合金。純銅、黃銅與青銅為完全不同的金屬材料，青銅絕非由黃銅加錫混合製成。',
+      sources: [
+        'https://periodic-table.rsc.org/element/29/copper',
+        'https://www.copper.org/resources/properties/atomic_structure.html'
+      ],
+      duration: 7.0
+    },
+    {
+      timestamp: 700.0,
       sentence: '「三星堆遺址發掘出大量海貝與象牙，證明古蜀王國具備跨區域遠程貿易與文化交流網絡。」',
       verdict: 'verified',
       explanation:
@@ -439,19 +452,19 @@ export const SEEDED_CLAIMS = {
       duration: 7.5
     },
     {
-      timestamp: 500.0,
-      sentence: '「格陵蘭島海華沙冰川下發現的巨大隕石坑，證實了新仙女木時期（Younger Dryas）彗星撞擊引發全球浩劫。」',
+      timestamp: 626.0,
+      sentence: '「格陵蘭海華沙彗星撞擊觸發了新仙女木時期全球浩劫，成為形成美國斯卡布蘭（Channeled Scablands）特大洪水的實錘起因。」(10:26–10:48)',
       verdict: 'misinformation',
       explanation:
-        '2022 年丹麥自然歷史博物館與國際地質科研團隊在《Science Advances》發表最新放射性錀鋨定年分析：海華沙隕石坑（Hiawatha Impact Crater）形成於距今約 5800 萬年前的古新世，遠早於約 1.28 萬年前的新仙女木事件，無法作為人類時期大洪水假說的證據。',
+        '地質年代學明確否定此因果關係：美國地質調查局（USGS）與第四紀地質學研究確認，斯卡布蘭洪泛地貌係由米蘇拉冰川湖（Glacial Lake Missoula）冰壩潰決引起，發生在距今約 19,000 至 15,000 年前；而新仙女木撞擊假說年代為約 12,900 年前，且海華沙隕石坑定年為 5800 萬年前，年代完全錯置無法契合。',
       sources: [
-        'https://www.science.org/doi/10.1126/sciadv.abm2434',
-        'https://www.nature.com/articles/d41586-022-00713-1'
+        'https://www.usgs.gov/publications/megafloods-and-clovis-cache-wenatchee-washington',
+        'https://www.science.org/doi/10.1126/sciadv.abm2434'
       ],
       duration: 7.5
     },
     {
-      timestamp: 660.0,
+      timestamp: 690.0,
       sentence: '「黑海大洪水假說（Black Sea deluge hypothesis）認為地中海海水在約西元前5600年衝破博斯普魯斯海峽灌入黑海淡水湖。」',
       verdict: 'verified',
       explanation:
