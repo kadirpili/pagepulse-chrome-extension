@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+
+  <!-- Background circle -->
+  <rect width="120" height="120" x="4" y="4" rx="28" fill="url(#grad)" filter="url(#shadow)" />
+
+  <!-- Clock / Stopwatch circle -->
+  <circle cx="64" cy="64" r="38" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- Clock hands -->
+  <path d="M64 42 V64 L78 72" fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Pulse lightning tick -->
+  <circle cx="64" cy="64" r="4.5" fill="#FFFFFF"/>
+  <circle cx="64" cy="20" r="3.5" fill="#93C5FD"/>
+</svg>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PagePulse - Reading Stats & Notes</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-branding">
+        <div class="header-logo">⏱️</div>
+        <div>
+          <h1 class="header-title">PagePulse</h1>
+          <p class="header-subtitle" id="page-host">Loading page...</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btn-refresh" class="icon-button" title="Refresh stats" aria-label="Refresh stats">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs" role="tablist">
+      <button class="tab-btn active" data-tab="stats" role="tab" aria-selected="true">Stats</button>
+      <button class="tab-btn" data-tab="notes" role="tab" aria-selected="false">Notes (<span id="notes-count">0</span>)</button>
+      <button class="tab-btn" data-tab="settings" role="tab" aria-selected="false">Settings</button>
+    </nav>
+
+    <!-- Selection Banner (Shown if text is selected on the page) -->
+    <div id="selection-banner" class="selection-banner hidden">
+      <span>Analyzing selected text</span>
+      <button id="btn-toggle-scope" class="text-button">Switch to full page</button>
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="tab-content">
+      <!-- 1. Stats Panel -->
+      <section id="tab-stats" class="tab-pane active" role="tabpanel">
+        <div class="metrics-grid">
+          <div class="metric-card primary">
+            <div class="metric-label">Reading Time</div>
+            <div class="metric-value" id="val-reading-time">0 min</div>
+            <div class="metric-sub" id="sub-reading-speed">at 200 wpm</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Words</div>
+            <div class="metric-value" id="val-words">0</div>
+            <div class="metric-sub" id="sub-paragraphs">0 paragraphs</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Characters</div>
+            <div class="metric-value" id="val-characters">0</div>
+            <div class="metric-sub" id="sub-characters-no-spaces">0 no spaces</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Speaking Time</div>
+            <div class="metric-value" id="val-speaking-time">0 min</div>
+            <div class="metric-sub" id="sub-speaking-speed">at 130 wpm</div>
+          </div>
+        </div>
+
+        <div class="stats-footer">
+          <button id="btn-copy-stats" class="secondary-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span>Copy Stats</span>
+          </button>
+          <span id="copy-toast" class="toast-message hidden">Copied!</span>
+        </div>
+      </section>
+
+      <!-- 2. Notes Panel -->
+      <section id="tab-notes" class="tab-pane" role="tabpanel">
+        <form id="note-form" class="note-input-group">
+          <textarea
+            id="note-input"
+            class="note-textarea"
+            placeholder="Write a quick note for this page..."
+            rows="3"
+            required
+          ></textarea>
+          <div class="note-form-actions">
+            <button type="submit" class="primary-btn">Save Note</button>
+          </div>
+        </form>
+
+        <div class="notes-header">
+          <h2 class="section-title">Saved Notes</h2>
+          <div class="notes-filter">
+            <button id="filter-current" class="filter-chip active">This Page</button>
+            <button id="filter-all" class="filter-chip">All Pages</button>
+          </div>
+        </div>
+
+        <div id="notes-list" class="notes-list">
+          <div class="empty-state">No notes saved for this page yet.</div>
+        </div>
+      </section>
+
+      <!-- 3. Settings Panel -->
+      <section id="tab-settings" class="tab-pane" role="tabpanel">
+        <div class="settings-group">
+          <label class="setting-label" for="setting-reading-wpm">
+            Reading Speed (Words per minute)
+            <span class="setting-value" id="lbl-reading-wpm">200 wpm</span>
+          </label>
+          <input
+            type="range"
+            id="setting-reading-wpm"
+            min="100"
+            max="450"
+            step="10"
+            value="200"
+            class="slider"
+          >
+          <p class="setting-hint">Standard adult silent reading speed is ~200-250 wpm.</p>
+        </div>
+
+        <div class="settings-group">
+          <label class="setting-label" for="setting-speaking-wpm">
+            Speaking Speed (Words per minute)
+            <span class="setting-value" id="lbl-speaking-wpm">130 wpm</span>
+          </label>
+          <input
+            type="range"
+            id="setting-speaking-wpm"
+            min="80"
+            max="250"
+            step="5"
+            value="130"
+            class="slider"
+          >
+          <p class="setting-hint">Normal presentation / conversational speech is ~130-150 wpm.</p>
+        </div>
+
+        <div class="settings-group">
+          <label class="setting-label" for="setting-theme">Theme</label>
+          <select id="setting-theme" class="select-input">
+            <option value="system">System Default</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>
