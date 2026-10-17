@@ -542,6 +542,39 @@ test('dom-components: OverlayManager & DrawerManager Class APIs', async (t) => {
     assert.equal(dm.isOpen(), false);
     dm.destroy();
   });
+
+  await t.test('DrawerManager setLoading and setError states', () => {
+    let retried = false;
+    const dm = new DrawerManager();
+    dm.mount(mockDoc.body);
+
+    // 1. Loading state
+    dm.setLoading('Extracting captions and evaluating claims...');
+    assert.equal(dm.isLoading, true);
+    assert.ok(dm.cardsListElement.querySelector('.yt-misinfo-state-loading'));
+    assert.ok(dm.cardsListElement.textContent.includes('Analyzing Video'));
+    assert.ok(dm.cardsListElement.textContent.includes('Extracting captions'));
+
+    // 2. Error state with retry
+    dm.setError('Captions unavailable for this video.', () => { retried = true; });
+    assert.equal(dm.isLoading, false);
+    assert.equal(dm.errorMessage, 'Captions unavailable for this video.');
+    assert.ok(dm.cardsListElement.querySelector('.yt-misinfo-state-error'));
+    assert.ok(dm.cardsListElement.textContent.includes('Captions unavailable'));
+
+    const retryBtn = dm.cardsListElement.querySelector('.yt-misinfo-btn-retry');
+    assert.ok(retryBtn, 'Retry button should be rendered');
+    retryBtn.click();
+    assert.equal(retried, true, 'Clicking retry button must trigger callback');
+
+    // 3. Recovery via setClaims
+    dm.setClaims(sampleDrawerClaims);
+    assert.equal(dm.isLoading, false);
+    assert.equal(dm.errorMessage, null);
+    assert.equal(dm.cardsListElement.querySelectorAll('.yt-misinfo-card').length, 3);
+
+    dm.destroy();
+  });
 });
 
 test('dom-components: Security & XSS Sanitization', async (t) => {

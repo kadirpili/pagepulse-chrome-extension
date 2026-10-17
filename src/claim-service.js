@@ -1275,6 +1275,32 @@ export function parseApiResponse(json) {
   return validClaims;
 }
 
+const apiStateMap = new Map();
+
+/**
+ * Returns the current API status for a given video ID.
+ * @param {string} videoId
+ * @returns {{ status: 'idle'|'loading'|'success'|'error', error: string|null, videoId: string|null }}
+ */
+export function getApiState(videoId) {
+  if (videoId && apiStateMap.has(videoId)) {
+    return { ...apiStateMap.get(videoId) };
+  }
+  return { status: 'idle', error: null, videoId: videoId || null };
+}
+
+/**
+ * Updates the recorded API status for a video ID.
+ * @param {string} videoId
+ * @param {'idle'|'loading'|'success'|'error'} status
+ * @param {string|null} [error]
+ */
+export function setApiState(videoId, status, error = null) {
+  if (videoId) {
+    apiStateMap.set(videoId, { status, error, videoId, timestamp: Date.now() });
+  }
+}
+
 /**
  * Fetches real claim data from the production API backend with:
  * - POST JSON body {"videoId": "..."}
@@ -1344,6 +1370,7 @@ export async function fetchClaimsFromBackend(videoId, endpoint = DEFAULT_PROD_EN
     throw new Error('fetch is not available in current environment');
   }
 
+  setApiState(cleanId, 'loading', null);
   let lastError = null;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -1394,6 +1421,10 @@ export async function fetchClaimsFromBackend(videoId, endpoint = DEFAULT_PROD_EN
         const status = res.status;
         // 4xx errors (except 429 Too Many Requests) are non-retryable client errors
         if (status >= 400 && status < 500 && status !== 429) {
+          const clientErrMsg = status === 422
+            ? 'Captions unavailable for this video.'
+            : (status === 404 ? 'Fact-check data not available for this video.' : `HTTP ${status}: ${res.statusText || 'Client Error'}`);
+          setApiState(cleanId, 'error', clientErrMsg);
           console.warn(`[YouTube Misinfo Detector] PROD API HTTP ${status} client error for video ${cleanId}. Non-retryable.`);
           return [];
         }
@@ -1401,7 +1432,9 @@ export async function fetchClaimsFromBackend(videoId, endpoint = DEFAULT_PROD_EN
       }
 
       const json = await res.json();
-      return parseApiResponse(json);
+      const results = parseApiResponse(json);
+      setApiState(cleanId, 'success', null);
+      return results;
     } catch (err) {
       if (timeoutId) clearTimeout(timeoutId);
       lastError = err;
@@ -1416,6 +1449,11 @@ export async function fetchClaimsFromBackend(videoId, endpoint = DEFAULT_PROD_EN
       }
     }
   }
+
+  const failureReason = lastError?.name === 'AbortError' || lastError?.message?.toLowerCase().includes('abort')
+    ? 'Request timed out waiting for AI fact-check service.'
+    : (lastError?.message || 'Failed to connect to fact-check backend service.');
+  setApiState(cleanId, 'error', failureReason);
 
   console.warn(
     `[YouTube Misinfo Detector] PROD API exhausted ${maxRetries + 1} attempts for video ${cleanId}. Error: ${lastError?.message}. Returning empty claims list.`
@@ -1480,6 +1518,7 @@ export async function getClaimsForVideo(videoId, options = {}) {
       } else {
         claims = generateDeterministicClaims(cleanId, options);
       }
+      setApiState(cleanId, 'success', null);
     }
 
     // Cache the resolved result (even if empty, prevents hammering backend)

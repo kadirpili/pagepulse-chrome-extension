@@ -5,7 +5,7 @@
  */
 
 import { parseYouTubeVideoId, isYouTubeWatchUrl } from './youtube-url.js';
-import { getClaimsForVideo } from './claim-service.js';
+import { getClaimsForVideo, getApiState } from './claim-service.js';
 import { findActiveClaim, seekToTimestamp, isAdActive, waitForVideoElement } from './video-tracker.js';
 import { OverlayManager } from './overlay-manager.js';
 import { DrawerManager } from './drawer-manager.js';
@@ -170,6 +170,9 @@ function teardownSession() {
 async function reloadClaimsForActiveVideo() {
   if (!activeVideoId) return;
   const isChinese = typeof document !== 'undefined' && /[\u4e00-\u9fa5]/.test(document.title || '');
+  if (drawerManager) {
+    drawerManager.setLoading('Reloading fact-checks from backend service...');
+  }
   mountStatusIndicator(activeVideoId, 'loading');
 
   try {
@@ -184,14 +187,23 @@ async function reloadClaimsForActiveVideo() {
     currentClaims = [];
   }
 
-  if (drawerManager) {
-    drawerManager.setClaims(currentClaims);
+  const apiState = getApiState(activeVideoId);
+  if (apiState.status === 'error' && currentClaims.length === 0) {
+    if (drawerManager) {
+      drawerManager.setError(apiState.error || 'Failed to retrieve analysis from backend service.', () => reloadClaimsForActiveVideo());
+    }
+    mountStatusIndicator(activeVideoId, 'error', apiState.error);
+  } else {
+    if (drawerManager) {
+      drawerManager.setClaims(currentClaims);
+    }
+    mountStatusIndicator(activeVideoId, currentClaims.length);
   }
-  mountStatusIndicator(activeVideoId, currentClaims.length);
 }
 
 /**
  * Starts a new session for the given video ID.
+ * Mounts the UI immediately to show active progress / loading state even before API call completes.
  * @param {string} videoId
  */
 async function startVideoSession(videoId) {
@@ -199,9 +211,29 @@ async function startVideoSession(videoId) {
   teardownSession();
   activeVideoId = videoId;
 
-  // Mount persistent status indicator immediately to show status/loading
-  const isProd = currentSettings.mode === 'prod';
-  mountStatusIndicator(videoId, isProd ? 'loading' : '...');
+  // Mount UI components IMMEDIATELY so the user sees the extension is active and working
+  overlayManager = new OverlayManager();
+  overlayManager.mount();
+  overlayManager.onViewTimeline(() => {
+    if (drawerManager) {
+      drawerManager.open();
+    }
+  });
+
+  drawerManager = new DrawerManager();
+  drawerManager.mount();
+  drawerManager.onSeek((targetTime) => {
+    if (activeVideoElement) {
+      seekToTimestamp(activeVideoElement, targetTime);
+      if (overlayManager) {
+        overlayManager.resetDismissed();
+      }
+    }
+  });
+
+  // Display initial loading/working state immediately
+  drawerManager.setLoading('Analyzing video transcript and screening claims with AI models...');
+  mountStatusIndicator(videoId, 'loading');
 
   // Detect if active video is in Chinese from page title or DOM text
   const isChinese = typeof document !== 'undefined' && /[\u4e00-\u9fa5]/.test(document.title || '');
@@ -221,37 +253,22 @@ async function startVideoSession(videoId) {
   // Abort if user navigated away while fetching claims
   if (activeVideoId !== videoId) return;
 
+  const apiState = getApiState(videoId);
+  if (apiState.status === 'error' && currentClaims.length === 0) {
+    drawerManager.setError(apiState.error || 'Failed to retrieve analysis from backend service.', () => reloadClaimsForActiveVideo());
+    mountStatusIndicator(videoId, 'error', apiState.error);
+  } else {
+    drawerManager.setClaims(currentClaims);
+    if (currentSettings.filterVerdict) {
+      drawerManager.setFilter(currentSettings.filterVerdict);
+    }
+    mountStatusIndicator(videoId, currentClaims.length);
+  }
+
   const videoElement = await waitForVideoElement(5000);
   if (!videoElement || activeVideoId !== videoId) return;
 
   activeVideoElement = videoElement;
-
-  // Mount UI components
-  overlayManager = new OverlayManager();
-  overlayManager.mount();
-  overlayManager.onViewTimeline(() => {
-    if (drawerManager) {
-      drawerManager.open();
-    }
-  });
-
-  drawerManager = new DrawerManager();
-  drawerManager.mount();
-  drawerManager.setClaims(currentClaims);
-  if (currentSettings.filterVerdict) {
-    drawerManager.setFilter(currentSettings.filterVerdict);
-  }
-  drawerManager.onSeek((targetTime) => {
-    if (activeVideoElement) {
-      seekToTimestamp(activeVideoElement, targetTime);
-      if (overlayManager) {
-        overlayManager.resetDismissed();
-      }
-    }
-  });
-
-  // Mount persistent status indicator on page with final claims count
-  mountStatusIndicator(videoId, currentClaims.length);
   sessionStartingForVideoId = null;
 
   // Attach video playback listeners
@@ -261,11 +278,12 @@ async function startVideoSession(videoId) {
 }
 
 /**
- * Mounts a floating indicator on YouTube to show the detector is running and processing.
+ * Mounts a floating indicator on YouTube to show the detector status (working, claims count, or error).
  * @param {string} videoId
- * @param {number|string} countOrStatus
+ * @param {number|string} countOrStatus - Number of claims, 'loading', or 'error'
+ * @param {string} [errorMessage] - Optional error details
  */
-function mountStatusIndicator(videoId, countOrStatus) {
+function mountStatusIndicator(videoId, countOrStatus, errorMessage = '') {
   let indicator = document.getElementById('yt-misinfo-status-badge');
   if (!indicator) {
     indicator = document.createElement('div');
@@ -277,7 +295,7 @@ function mountStatusIndicator(videoId, countOrStatus) {
       z-index: 999999;
       background: #0f0f0f;
       color: #fff;
-      border: 1px solid #ff4d4f;
+      border: 1px solid #3ea6ff;
       border-radius: 20px;
       padding: 8px 16px;
       font-family: Roboto, Arial, sans-serif;
@@ -288,6 +306,7 @@ function mountStatusIndicator(videoId, countOrStatus) {
       gap: 8px;
       box-shadow: 0 4px 16px rgba(0,0,0,0.6);
       cursor: pointer;
+      transition: all 0.2s ease;
     `;
     indicator.title = 'Click to open claims timeline drawer';
     indicator.addEventListener('click', () => {
@@ -298,19 +317,29 @@ function mountStatusIndicator(videoId, countOrStatus) {
 
   const isProd = currentSettings.mode === 'prod';
   const modeTag = isProd ? 'PROD' : 'TEST';
-  const badgeColor = isProd ? '#52c41a' : '#ff4d4f';
-  indicator.style.borderColor = badgeColor;
 
-  const countDisplay = countOrStatus === 'loading'
-    ? 'Loading...'
-    : typeof countOrStatus === 'number'
-      ? `${countOrStatus} claims`
-      : `${countOrStatus || 0} claims`;
-
-  indicator.innerHTML = `
-    <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${badgeColor};box-shadow:0 0 8px ${badgeColor};animation:ytPulse 1.5s infinite;"></span>
-    <span>🛡️ Misinfo Detector Active [${modeTag}] (${countDisplay})</span>
-  `;
+  if (countOrStatus === 'loading') {
+    indicator.style.borderColor = '#faad14';
+    indicator.innerHTML = `
+      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#faad14;box-shadow:0 0 8px #faad14;animation:ytPulse 1.2s infinite;"></span>
+      <span>⏳ Misinfo Detector [${modeTag}]: Analyzing Video...</span>
+    `;
+  } else if (countOrStatus === 'error') {
+    indicator.style.borderColor = '#ff4d4f';
+    const shortErr = errorMessage ? `: ${errorMessage.slice(0, 32)}...` : '';
+    indicator.innerHTML = `
+      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ff4d4f;box-shadow:0 0 8px #ff4d4f;"></span>
+      <span>⚠️ Misinfo Detector [${modeTag}] Error${shortErr} (click to view)</span>
+    `;
+  } else {
+    const badgeColor = isProd ? '#52c41a' : '#3ea6ff';
+    indicator.style.borderColor = badgeColor;
+    const num = typeof countOrStatus === 'number' ? countOrStatus : 0;
+    indicator.innerHTML = `
+      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${badgeColor};box-shadow:0 0 8px ${badgeColor};"></span>
+      <span>🛡️ Misinfo Detector Active [${modeTag}] (${num} claims)</span>
+    `;
+  }
 }
 
 function onSeeking() {

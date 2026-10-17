@@ -1144,6 +1144,18 @@
     validClaims.sort((a, b) => a.timestamp - b.timestamp);
     return validClaims;
   }
+  var apiStateMap = /* @__PURE__ */ new Map();
+  function getApiState(videoId) {
+    if (videoId && apiStateMap.has(videoId)) {
+      return { ...apiStateMap.get(videoId) };
+    }
+    return { status: "idle", error: null, videoId: videoId || null };
+  }
+  function setApiState(videoId, status, error = null) {
+    if (videoId) {
+      apiStateMap.set(videoId, { status, error, videoId, timestamp: Date.now() });
+    }
+  }
   async function fetchClaimsFromBackend(videoId, endpoint = DEFAULT_PROD_ENDPOINT, options = {}) {
     const maxRetries = typeof options.maxRetries === "number" ? options.maxRetries : 2;
     const initialDelayMs = typeof options.initialDelayMs === "number" ? options.initialDelayMs : 300;
@@ -1185,6 +1197,7 @@
     if (!fetchFn) {
       throw new Error("fetch is not available in current environment");
     }
+    setApiState(cleanId, "loading", null);
     let lastError = null;
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       let controller = null;
@@ -1223,13 +1236,17 @@
         if (!res.ok) {
           const status = res.status;
           if (status >= 400 && status < 500 && status !== 429) {
+            const clientErrMsg = status === 422 ? "Captions unavailable for this video." : status === 404 ? "Fact-check data not available for this video." : `HTTP ${status}: ${res.statusText || "Client Error"}`;
+            setApiState(cleanId, "error", clientErrMsg);
             console.warn(`[YouTube Misinfo Detector] PROD API HTTP ${status} client error for video ${cleanId}. Non-retryable.`);
             return [];
           }
           throw new Error(`HTTP ${status}: ${res.statusText || "Error"}`);
         }
         const json = await res.json();
-        return parseApiResponse(json);
+        const results = parseApiResponse(json);
+        setApiState(cleanId, "success", null);
+        return results;
       } catch (err) {
         if (timeoutId) clearTimeout(timeoutId);
         lastError = err;
@@ -1242,6 +1259,8 @@
         }
       }
     }
+    const failureReason = lastError?.name === "AbortError" || lastError?.message?.toLowerCase().includes("abort") ? "Request timed out waiting for AI fact-check service." : lastError?.message || "Failed to connect to fact-check backend service.";
+    setApiState(cleanId, "error", failureReason);
     console.warn(
       `[YouTube Misinfo Detector] PROD API exhausted ${maxRetries + 1} attempts for video ${cleanId}. Error: ${lastError?.message}. Returning empty claims list.`
     );
@@ -1285,6 +1304,7 @@
         } else {
           claims = generateDeterministicClaims(cleanId, options);
         }
+        setApiState(cleanId, "success", null);
       }
       claimsCache.set(cacheKey, claims);
       return claims;
@@ -1724,6 +1744,8 @@
       this.activeClaim = null;
       this.currentFilter = "all";
       this.isOpenState = false;
+      this.isLoading = false;
+      this.errorMessage = null;
       this.onSeekCallback = options.onSeek || null;
     }
     /**
@@ -1873,15 +1895,114 @@
       });
     }
     /**
+    /**
+     * Sets the drawer into an active loading state while fact-checks are being fetched.
+     * @param {string} [message]
+     */
+    setLoading(message = "Analyzing video transcript and fact-checking claims with AI...") {
+      this.isLoading = true;
+      this.errorMessage = null;
+      this._updateCounters();
+      if (this.emptyStateElement) {
+        this.emptyStateElement.classList.add("yt-misinfo-hidden");
+      }
+      if (this.cardsListElement) {
+        if (typeof this.cardsListElement.replaceChildren === "function") {
+          this.cardsListElement.replaceChildren();
+        } else {
+          while (this.cardsListElement.firstChild) {
+            this.cardsListElement.removeChild(this.cardsListElement.firstChild);
+          }
+        }
+        const box = document.createElement("div");
+        box.className = "yt-misinfo-state-box yt-misinfo-state-loading";
+        const spinner = document.createElement("div");
+        spinner.className = "yt-misinfo-spinner-circle";
+        const title = document.createElement("div");
+        title.className = "yt-misinfo-state-title";
+        title.textContent = "Analyzing Video";
+        const desc = document.createElement("div");
+        desc.className = "yt-misinfo-state-desc";
+        desc.textContent = message;
+        box.appendChild(spinner);
+        box.appendChild(title);
+        box.appendChild(desc);
+        this.cardsListElement.appendChild(box);
+      }
+    }
+    /**
+     * Sets the drawer into an error state if fetching or fact-checking fails.
+     * @param {string} errorMessage
+     * @param {() => void} [onRetry]
+     */
+    setError(errorMessage, onRetry) {
+      this.isLoading = false;
+      this.errorMessage = errorMessage;
+      this._updateCounters();
+      if (this.emptyStateElement) {
+        this.emptyStateElement.classList.add("yt-misinfo-hidden");
+      }
+      if (this.cardsListElement) {
+        if (typeof this.cardsListElement.replaceChildren === "function") {
+          this.cardsListElement.replaceChildren();
+        } else {
+          while (this.cardsListElement.firstChild) {
+            this.cardsListElement.removeChild(this.cardsListElement.firstChild);
+          }
+        }
+        const box = document.createElement("div");
+        box.className = "yt-misinfo-state-box yt-misinfo-state-error";
+        const icon = document.createElement("div");
+        icon.style.cssText = "font-size: 32px; margin-bottom: 12px;";
+        icon.textContent = "\u26A0\uFE0F";
+        const title = document.createElement("div");
+        title.className = "yt-misinfo-state-title";
+        title.style.color = "#ff4d4f";
+        title.textContent = "Fact-Check Service Notice";
+        const desc = document.createElement("div");
+        desc.className = "yt-misinfo-state-desc";
+        desc.textContent = errorMessage || "Failed to retrieve analysis from backend service.";
+        box.appendChild(icon);
+        box.appendChild(title);
+        box.appendChild(desc);
+        if (typeof onRetry === "function") {
+          const retryBtn = document.createElement("button");
+          retryBtn.type = "button";
+          retryBtn.className = "yt-misinfo-btn-retry";
+          retryBtn.textContent = "Retry Analysis";
+          retryBtn.addEventListener("click", (e) => {
+            if (e && typeof e.stopPropagation === "function") e.stopPropagation();
+            onRetry();
+          });
+          box.appendChild(retryBtn);
+        }
+        this.cardsListElement.appendChild(box);
+      }
+    }
+    /**
      * Sets the claims array and re-renders the chronological cards.
      * @param {Array<Object>} [claims=[]]
      */
     setClaims(claims = []) {
+      this.isLoading = false;
+      this.errorMessage = null;
       this.claims = [...claims].sort((a, b) => a.timestamp - b.timestamp);
       this._updateCounters();
       this.render();
     }
     _updateCounters() {
+      if (this.isLoading) {
+        if (this.totalBadge) this.totalBadge.textContent = "\u23F3";
+        if (this.tabCount) this.tabCount.textContent = "\u23F3";
+        if (this.tabAlertDot) this.tabAlertDot.classList.add("yt-misinfo-hidden");
+        return;
+      }
+      if (this.errorMessage) {
+        if (this.totalBadge) this.totalBadge.textContent = "!";
+        if (this.tabCount) this.tabCount.textContent = "!";
+        if (this.tabAlertDot) this.tabAlertDot.classList.remove("yt-misinfo-hidden");
+        return;
+      }
       const total = this.claims.length;
       const misinfoCount = this.claims.filter((c) => c.verdict === "misinformation").length;
       if (this.totalBadge) this.totalBadge.textContent = String(total);
@@ -1909,6 +2030,7 @@
      */
     render() {
       if (!this.cardsListElement) return;
+      if (this.isLoading || this.errorMessage) return;
       const filtered = this.claims.filter((claim) => {
         if (this.currentFilter === "all") return true;
         return claim.verdict === this.currentFilter;
@@ -2263,6 +2385,9 @@
   async function reloadClaimsForActiveVideo() {
     if (!activeVideoId) return;
     const isChinese = typeof document !== "undefined" && /[\u4e00-\u9fa5]/.test(document.title || "");
+    if (drawerManager) {
+      drawerManager.setLoading("Reloading fact-checks from backend service...");
+    }
     mountStatusIndicator(activeVideoId, "loading");
     try {
       currentClaims = await getClaimsForVideo(activeVideoId, {
@@ -2275,17 +2400,42 @@
       console.error("[YouTube Misinformation Detector] Failed to reload claims:", err);
       currentClaims = [];
     }
-    if (drawerManager) {
-      drawerManager.setClaims(currentClaims);
+    const apiState = getApiState(activeVideoId);
+    if (apiState.status === "error" && currentClaims.length === 0) {
+      if (drawerManager) {
+        drawerManager.setError(apiState.error || "Failed to retrieve analysis from backend service.", () => reloadClaimsForActiveVideo());
+      }
+      mountStatusIndicator(activeVideoId, "error", apiState.error);
+    } else {
+      if (drawerManager) {
+        drawerManager.setClaims(currentClaims);
+      }
+      mountStatusIndicator(activeVideoId, currentClaims.length);
     }
-    mountStatusIndicator(activeVideoId, currentClaims.length);
   }
   async function startVideoSession(videoId) {
     sessionStartingForVideoId = videoId;
     teardownSession();
     activeVideoId = videoId;
-    const isProd = currentSettings.mode === "prod";
-    mountStatusIndicator(videoId, isProd ? "loading" : "...");
+    overlayManager = new OverlayManager();
+    overlayManager.mount();
+    overlayManager.onViewTimeline(() => {
+      if (drawerManager) {
+        drawerManager.open();
+      }
+    });
+    drawerManager = new DrawerManager();
+    drawerManager.mount();
+    drawerManager.onSeek((targetTime) => {
+      if (activeVideoElement) {
+        seekToTimestamp(activeVideoElement, targetTime);
+        if (overlayManager) {
+          overlayManager.resetDismissed();
+        }
+      }
+    });
+    drawerManager.setLoading("Analyzing video transcript and screening claims with AI models...");
+    mountStatusIndicator(videoId, "loading");
     const isChinese = typeof document !== "undefined" && /[\u4e00-\u9fa5]/.test(document.title || "");
     try {
       currentClaims = await getClaimsForVideo(videoId, {
@@ -2299,37 +2449,26 @@
       currentClaims = [];
     }
     if (activeVideoId !== videoId) return;
+    const apiState = getApiState(videoId);
+    if (apiState.status === "error" && currentClaims.length === 0) {
+      drawerManager.setError(apiState.error || "Failed to retrieve analysis from backend service.", () => reloadClaimsForActiveVideo());
+      mountStatusIndicator(videoId, "error", apiState.error);
+    } else {
+      drawerManager.setClaims(currentClaims);
+      if (currentSettings.filterVerdict) {
+        drawerManager.setFilter(currentSettings.filterVerdict);
+      }
+      mountStatusIndicator(videoId, currentClaims.length);
+    }
     const videoElement = await waitForVideoElement(5e3);
     if (!videoElement || activeVideoId !== videoId) return;
     activeVideoElement = videoElement;
-    overlayManager = new OverlayManager();
-    overlayManager.mount();
-    overlayManager.onViewTimeline(() => {
-      if (drawerManager) {
-        drawerManager.open();
-      }
-    });
-    drawerManager = new DrawerManager();
-    drawerManager.mount();
-    drawerManager.setClaims(currentClaims);
-    if (currentSettings.filterVerdict) {
-      drawerManager.setFilter(currentSettings.filterVerdict);
-    }
-    drawerManager.onSeek((targetTime) => {
-      if (activeVideoElement) {
-        seekToTimestamp(activeVideoElement, targetTime);
-        if (overlayManager) {
-          overlayManager.resetDismissed();
-        }
-      }
-    });
-    mountStatusIndicator(videoId, currentClaims.length);
     sessionStartingForVideoId = null;
     activeVideoElement.addEventListener("timeupdate", onTimeUpdate);
     activeVideoElement.addEventListener("seeking", onSeeking);
     activeVideoElement.addEventListener("seeked", onSeeked);
   }
-  function mountStatusIndicator(videoId, countOrStatus) {
+  function mountStatusIndicator(videoId, countOrStatus, errorMessage = "") {
     let indicator = document.getElementById("yt-misinfo-status-badge");
     if (!indicator) {
       indicator = document.createElement("div");
@@ -2341,7 +2480,7 @@
       z-index: 999999;
       background: #0f0f0f;
       color: #fff;
-      border: 1px solid #ff4d4f;
+      border: 1px solid #3ea6ff;
       border-radius: 20px;
       padding: 8px 16px;
       font-family: Roboto, Arial, sans-serif;
@@ -2352,6 +2491,7 @@
       gap: 8px;
       box-shadow: 0 4px 16px rgba(0,0,0,0.6);
       cursor: pointer;
+      transition: all 0.2s ease;
     `;
       indicator.title = "Click to open claims timeline drawer";
       indicator.addEventListener("click", () => {
@@ -2361,13 +2501,28 @@
     }
     const isProd = currentSettings.mode === "prod";
     const modeTag = isProd ? "PROD" : "TEST";
-    const badgeColor = isProd ? "#52c41a" : "#ff4d4f";
-    indicator.style.borderColor = badgeColor;
-    const countDisplay = countOrStatus === "loading" ? "Loading..." : typeof countOrStatus === "number" ? `${countOrStatus} claims` : `${countOrStatus || 0} claims`;
-    indicator.innerHTML = `
-    <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${badgeColor};box-shadow:0 0 8px ${badgeColor};animation:ytPulse 1.5s infinite;"></span>
-    <span>\u{1F6E1}\uFE0F Misinfo Detector Active [${modeTag}] (${countDisplay})</span>
-  `;
+    if (countOrStatus === "loading") {
+      indicator.style.borderColor = "#faad14";
+      indicator.innerHTML = `
+      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#faad14;box-shadow:0 0 8px #faad14;animation:ytPulse 1.2s infinite;"></span>
+      <span>\u23F3 Misinfo Detector [${modeTag}]: Analyzing Video...</span>
+    `;
+    } else if (countOrStatus === "error") {
+      indicator.style.borderColor = "#ff4d4f";
+      const shortErr = errorMessage ? `: ${errorMessage.slice(0, 32)}...` : "";
+      indicator.innerHTML = `
+      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ff4d4f;box-shadow:0 0 8px #ff4d4f;"></span>
+      <span>\u26A0\uFE0F Misinfo Detector [${modeTag}] Error${shortErr} (click to view)</span>
+    `;
+    } else {
+      const badgeColor = isProd ? "#52c41a" : "#3ea6ff";
+      indicator.style.borderColor = badgeColor;
+      const num = typeof countOrStatus === "number" ? countOrStatus : 0;
+      indicator.innerHTML = `
+      <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${badgeColor};box-shadow:0 0 8px ${badgeColor};"></span>
+      <span>\u{1F6E1}\uFE0F Misinfo Detector Active [${modeTag}] (${num} claims)</span>
+    `;
+    }
   }
   function onSeeking() {
     isSeeking = true;

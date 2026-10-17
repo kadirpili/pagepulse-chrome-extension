@@ -266,6 +266,8 @@ export class DrawerManager {
     this.activeClaim = null;
     this.currentFilter = 'all'; // 'all' | 'misinformation' | 'verified' | 'unknown'
     this.isOpenState = false;
+    this.isLoading = false;
+    this.errorMessage = null;
     this.onSeekCallback = options.onSeek || null;
   }
 
@@ -455,16 +457,135 @@ export class DrawerManager {
   }
 
   /**
+  /**
+   * Sets the drawer into an active loading state while fact-checks are being fetched.
+   * @param {string} [message]
+   */
+  setLoading(message = 'Analyzing video transcript and fact-checking claims with AI...') {
+    this.isLoading = true;
+    this.errorMessage = null;
+    this._updateCounters();
+
+    if (this.emptyStateElement) {
+      this.emptyStateElement.classList.add('yt-misinfo-hidden');
+    }
+
+    if (this.cardsListElement) {
+      if (typeof this.cardsListElement.replaceChildren === 'function') {
+        this.cardsListElement.replaceChildren();
+      } else {
+        while (this.cardsListElement.firstChild) {
+          this.cardsListElement.removeChild(this.cardsListElement.firstChild);
+        }
+      }
+
+      const box = document.createElement('div');
+      box.className = 'yt-misinfo-state-box yt-misinfo-state-loading';
+
+      const spinner = document.createElement('div');
+      spinner.className = 'yt-misinfo-spinner-circle';
+
+      const title = document.createElement('div');
+      title.className = 'yt-misinfo-state-title';
+      title.textContent = 'Analyzing Video';
+
+      const desc = document.createElement('div');
+      desc.className = 'yt-misinfo-state-desc';
+      desc.textContent = message;
+
+      box.appendChild(spinner);
+      box.appendChild(title);
+      box.appendChild(desc);
+      this.cardsListElement.appendChild(box);
+    }
+  }
+
+  /**
+   * Sets the drawer into an error state if fetching or fact-checking fails.
+   * @param {string} errorMessage
+   * @param {() => void} [onRetry]
+   */
+  setError(errorMessage, onRetry) {
+    this.isLoading = false;
+    this.errorMessage = errorMessage;
+    this._updateCounters();
+
+    if (this.emptyStateElement) {
+      this.emptyStateElement.classList.add('yt-misinfo-hidden');
+    }
+
+    if (this.cardsListElement) {
+      if (typeof this.cardsListElement.replaceChildren === 'function') {
+        this.cardsListElement.replaceChildren();
+      } else {
+        while (this.cardsListElement.firstChild) {
+          this.cardsListElement.removeChild(this.cardsListElement.firstChild);
+        }
+      }
+
+      const box = document.createElement('div');
+      box.className = 'yt-misinfo-state-box yt-misinfo-state-error';
+
+      const icon = document.createElement('div');
+      icon.style.cssText = 'font-size: 32px; margin-bottom: 12px;';
+      icon.textContent = '⚠️';
+
+      const title = document.createElement('div');
+      title.className = 'yt-misinfo-state-title';
+      title.style.color = '#ff4d4f';
+      title.textContent = 'Fact-Check Service Notice';
+
+      const desc = document.createElement('div');
+      desc.className = 'yt-misinfo-state-desc';
+      desc.textContent = errorMessage || 'Failed to retrieve analysis from backend service.';
+
+      box.appendChild(icon);
+      box.appendChild(title);
+      box.appendChild(desc);
+
+      if (typeof onRetry === 'function') {
+        const retryBtn = document.createElement('button');
+        retryBtn.type = 'button';
+        retryBtn.className = 'yt-misinfo-btn-retry';
+        retryBtn.textContent = 'Retry Analysis';
+        retryBtn.addEventListener('click', (e) => {
+          if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+          onRetry();
+        });
+        box.appendChild(retryBtn);
+      }
+
+      this.cardsListElement.appendChild(box);
+    }
+  }
+
+  /**
    * Sets the claims array and re-renders the chronological cards.
    * @param {Array<Object>} [claims=[]]
    */
   setClaims(claims = []) {
+    this.isLoading = false;
+    this.errorMessage = null;
     this.claims = [...claims].sort((a, b) => a.timestamp - b.timestamp);
     this._updateCounters();
     this.render();
   }
 
   _updateCounters() {
+    if (this.isLoading) {
+      if (this.totalBadge) this.totalBadge.textContent = '⏳';
+      if (this.tabCount) this.tabCount.textContent = '⏳';
+      if (this.tabAlertDot) this.tabAlertDot.classList.add('yt-misinfo-hidden');
+      return;
+    }
+
+    if (this.errorMessage) {
+      if (this.totalBadge) this.totalBadge.textContent = '!';
+      if (this.tabCount) this.tabCount.textContent = '!';
+      if (this.tabAlertDot) this.tabAlertDot.classList.remove('yt-misinfo-hidden');
+      return;
+    }
+
     const total = this.claims.length;
     const misinfoCount = this.claims.filter((c) => c.verdict === 'misinformation').length;
 
@@ -495,6 +616,7 @@ export class DrawerManager {
    */
   render() {
     if (!this.cardsListElement) return;
+    if (this.isLoading || this.errorMessage) return;
 
     const filtered = this.claims.filter((claim) => {
       if (this.currentFilter === 'all') return true;
