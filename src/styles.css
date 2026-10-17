@@ -7,6 +7,9 @@
   --yt-misinfo-red: #ff4d4f;
   --yt-misinfo-red-bg: rgba(255, 77, 79, 0.14);
   --yt-misinfo-red-glow: rgba(255, 77, 79, 0.4);
+  --yt-misinfo-yellow: #faad14;
+  --yt-misinfo-yellow-bg: rgba(250, 173, 20, 0.14);
+  --yt-misinfo-yellow-glow: rgba(250, 173, 20, 0.4);
   --yt-misinfo-green: #52c41a;
   --yt-misinfo-green-bg: rgba(82, 196, 26, 0.14);
   --yt-misinfo-gray: #8c8c8c;
@@ -58,6 +61,18 @@
   animation: ytMisinfoSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
   transition: opacity 0.18s ease, transform 0.18s ease !important;
   backdrop-filter: blur(8px) !important;
+}
+
+.yt-misinfo-card--danger {
+  border-color: var(--yt-misinfo-red) !important;
+  border-left: 4px solid var(--yt-misinfo-red) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 12px var(--yt-misinfo-red-glow) !important;
+}
+
+.yt-misinfo-card--warning {
+  border-color: var(--yt-misinfo-yellow) !important;
+  border-left: 4px solid var(--yt-misinfo-yellow) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 12px var(--yt-misinfo-yellow-glow) !important;
 }
 
 .yt-misinfo-card--hiding {
@@ -252,10 +267,10 @@
   width: 360px !important;
   height: calc(100vh - 56px) !important;
   z-index: 2000 !important;
-  background-color: var(--yt-spec-base-background, #0f0f0f) !important;
-  color: var(--yt-spec-text-primary, #ffffff) !important;
-  border-left: 1px solid var(--yt-spec-10-percent-layer, rgba(255, 255, 255, 0.1)) !important;
-  box-shadow: -6px 0 20px rgba(0, 0, 0, 0.4) !important;
+  background-color: #0f0f0f !important;
+  color: #ffffff !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: -6px 0 24px rgba(0, 0, 0, 0.6) !important;
   display: flex !important;
   flex-direction: column !important;
   font-family: var(--yt-misinfo-font) !important;
@@ -368,8 +383,9 @@
 }
 
 .yt-misinfo-timeline-card {
-  background-color: var(--yt-spec-raised-background, #1f1f1f) !important;
-  border: 1px solid var(--yt-spec-10-percent-layer, rgba(255, 255, 255, 0.1)) !important;
+  background-color: #1f1f1f !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
   border-left: 3px solid transparent !important;
   border-radius: 8px !important;
   padding: 12px !important;
@@ -380,15 +396,20 @@
 
 .yt-misinfo-timeline-card:hover {
   transform: translateY(-1px) !important;
-  background-color: var(--yt-spec-menu-background, #282828) !important;
+  background-color: #282828 !important;
 }
 
 .yt-misinfo-timeline-card:focus-visible {
   border-color: #3ea6ff !important;
 }
 
+.yt-misinfo-timeline-card--danger,
 .yt-misinfo-timeline-card--misinformation {
   border-left-color: var(--yt-misinfo-red) !important;
+}
+
+.yt-misinfo-timeline-card--warning {
+  border-left-color: var(--yt-misinfo-yellow) !important;
 }
 
 .yt-misinfo-timeline-card--verified {
@@ -442,11 +463,18 @@
   letter-spacing: 0.3px !important;
 }
 
+.yt-misinfo-badge--danger,
 .yt-misinfo-badge--misinformation,
 .badge-misinformation {
   color: var(--yt-misinfo-red) !important;
   background-color: var(--yt-misinfo-red-bg) !important;
   border: 1px solid var(--yt-misinfo-red) !important;
+}
+
+.yt-misinfo-badge--warning {
+  color: var(--yt-misinfo-yellow) !important;
+  background-color: var(--yt-misinfo-yellow-bg) !important;
+  border: 1px solid var(--yt-misinfo-yellow) !important;
 }
 
 .yt-misinfo-badge--verified,
@@ -464,19 +492,19 @@
 }
 
 .yt-misinfo-card-quote {
-  font-size: 13px !important;
-  line-height: 1.4 !important;
+  font-size: 13.5px !important;
+  line-height: 1.45 !important;
   font-weight: 500 !important;
-  margin: 0 0 6px 0 !important;
-  color: var(--yt-spec-text-primary, #ffffff) !important;
+  margin: 0 0 8px 0 !important;
+  color: #ffffff !important;
   word-break: break-word !important;
 }
 
 .yt-misinfo-card-desc {
-  font-size: 12px !important;
-  line-height: 1.4 !important;
-  color: var(--yt-spec-text-secondary, #aaaaaa) !important;
-  margin: 0 0 8px 0 !important;
+  font-size: 12.5px !important;
+  line-height: 1.45 !important;
+  color: #dcdcdc !important;
+  margin: 0 0 10px 0 !important;
   word-break: break-word !important;
 }
 
@@ -511,35 +539,3 @@
   display: none !important;
 }
 
-/* ==========================================================================
-   4. Light Mode Adaptations (html:not([dark]))
-   ========================================================================== */
-
-html:not([dark]) #yt-misinfo-drawer-panel,
-html:not([dark]) #yt-misinfo-drawer {
-  background-color: #ffffff !important;
-  color: #0f0f0f !important;
-  border-left-color: rgba(0, 0, 0, 0.1) !important;
-  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.1) !important;
-}
-
-html:not([dark]) .yt-misinfo-card {
-  background-color: #ffffff !important;
-  color: #0f0f0f !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
-}
-
-html:not([dark]) .yt-misinfo-timeline-card {
-  background-color: #f9f9f9 !important;
-  border-color: #e5e5e5 !important;
-}
-
-html:not([dark]) .yt-misinfo-timeline-card:hover {
-  background-color: #f0f0f0 !important;
-}
-
-html:not([dark]) .yt-misinfo-drawer-tab {
-  background-color: #ffffff !important;
-  color: #0f0f0f !important;
-  border-color: rgba(0, 0, 0, 0.15) !important;
-}

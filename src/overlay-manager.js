@@ -16,7 +16,13 @@ export function createWarningOverlay(claim, options = {}) {
   container.style.pointerEvents = 'none';
 
   const card = document.createElement('div');
-  card.className = 'yt-misinfo-card yt-misinfo-card--misinformation';
+  const hasScore = typeof claim?.score === 'number';
+  const isDanger = hasScore ? claim.score >= 4 : true;
+  const isWarning = hasScore && claim.score < 4;
+
+  card.className = `yt-misinfo-card yt-misinfo-card--misinformation ${
+    isWarning ? 'yt-misinfo-card--warning' : 'yt-misinfo-card--danger'
+  }`;
   card.setAttribute('role', 'alert');
   card.setAttribute('aria-live', 'polite');
   card.style.pointerEvents = 'auto';
@@ -29,12 +35,25 @@ export function createWarningOverlay(claim, options = {}) {
   header.className = 'yt-misinfo-card-header';
 
   const badge = document.createElement('div');
-  badge.className = 'yt-misinfo-card-badge';
+  badge.className = `yt-misinfo-card-badge ${
+    isWarning ? 'yt-misinfo-card-badge--warning' : 'yt-misinfo-card-badge--danger'
+  }`;
+  if (isWarning) {
+    badge.style.color = 'var(--yt-misinfo-yellow)';
+  } else {
+    badge.style.color = 'var(--yt-misinfo-red)';
+  }
+
+  const badgeIconColor = isWarning ? 'var(--yt-misinfo-yellow)' : 'currentColor';
+  const badgeText = hasScore
+    ? (claim.score >= 4 ? `Error Warning (Score: ${claim.score})` : `Warning (Score: ${claim.score})`)
+    : 'Misinformation Alert';
+
   badge.innerHTML = `
-    <svg class="yt-misinfo-icon" viewBox="0 0 24 24" width="16" height="16">
+    <svg class="yt-misinfo-icon" viewBox="0 0 24 24" width="16" height="16" style="color: ${badgeIconColor}">
       <path d="M12 2L1 21h22L12 2zm0 3.5L20 19H4L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z" fill="currentColor"/>
     </svg>
-    <span class="yt-misinfo-card-badge-text">Misinformation Alert</span>
+    <span class="yt-misinfo-card-badge-text">${badgeText}</span>
   `;
 
   const dismissBtn = document.createElement('button');

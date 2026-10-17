@@ -394,6 +394,52 @@ test('dom-components: Interactive Timeline Drawer Component', async (t) => {
     assert.ok(badge3.textContent.toLowerCase().includes('unverified'));
   });
 
+  await t.test('applies score 2-5 styles: red error warning for 4-5 and yellow warning for 2-3 without verdict', () => {
+    const scoredClaims = [
+      {
+        timestamp: 10.0,
+        sentence: 'Mildly disputed assertion.',
+        score: 3.2,
+        explanation: 'Evidence indicates key parts are misleading.',
+        sources: ['https://factcheck.org/1']
+      },
+      {
+        timestamp: 40.0,
+        sentence: 'Blatantly false assertion.',
+        score: 4.8,
+        explanation: 'Completely debunked by scientific consensus.',
+        sources: ['https://factcheck.org/2']
+      }
+    ];
+
+    // Drawer tests
+    const drawer = createDrawer(scoredClaims, { onSeek: () => {} });
+    const cards = drawer.querySelectorAll('.yt-misinfo-card');
+
+    // Card 1: Score 3.2 (Yellow warning, no verdict text)
+    assert.ok(cards[0].classList.contains('yt-misinfo-timeline-card--warning'));
+    const badge1 = cards[0].querySelector('.yt-misinfo-badge--warning');
+    assert.ok(badge1, 'Must have .yt-misinfo-badge--warning');
+    assert.equal(badge1.textContent, 'Score: 3.2');
+    assert.equal(cards[0].querySelector('.badge-misinformation'), null, 'Must not show verdict badge');
+
+    // Card 2: Score 4.8 (Red error warning, no verdict text)
+    assert.ok(cards[1].classList.contains('yt-misinfo-timeline-card--danger'));
+    const badge2 = cards[1].querySelector('.yt-misinfo-badge--danger');
+    assert.ok(badge2, 'Must have .yt-misinfo-badge--danger');
+    assert.equal(badge2.textContent, 'Score: 4.8');
+    assert.equal(cards[1].querySelector('.badge-misinformation'), null, 'Must not show verdict badge');
+
+    // Overlay tests
+    const overlayYellow = createWarningOverlay(scoredClaims[0]);
+    assert.ok(overlayYellow.querySelector('.yt-misinfo-card--warning'));
+    assert.ok(overlayYellow.textContent.includes('Warning (Score: 3.2)'));
+
+    const overlayRed = createWarningOverlay(scoredClaims[1]);
+    assert.ok(overlayRed.querySelector('.yt-misinfo-card--danger'));
+    assert.ok(overlayRed.textContent.includes('Score: 4.8'));
+  });
+
   await t.test('formats timestamps chronologically as MM:SS', () => {
     const drawer = createDrawer(sampleDrawerClaims, { onSeek: () => {} });
     const cards = drawer.querySelectorAll('.yt-misinfo-card');

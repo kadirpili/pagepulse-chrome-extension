@@ -1419,7 +1419,10 @@
     container.className = "yt-misinfo-overlay-container yt-misinfo-overlay";
     container.style.pointerEvents = "none";
     const card = document.createElement("div");
-    card.className = "yt-misinfo-card yt-misinfo-card--misinformation";
+    const hasScore = typeof claim?.score === "number";
+    const isDanger = hasScore ? claim.score >= 4 : true;
+    const isWarning = hasScore && claim.score < 4;
+    card.className = `yt-misinfo-card yt-misinfo-card--misinformation ${isWarning ? "yt-misinfo-card--warning" : "yt-misinfo-card--danger"}`;
     card.setAttribute("role", "alert");
     card.setAttribute("aria-live", "polite");
     card.style.pointerEvents = "auto";
@@ -1429,12 +1432,19 @@
     const header = document.createElement("div");
     header.className = "yt-misinfo-card-header";
     const badge = document.createElement("div");
-    badge.className = "yt-misinfo-card-badge";
+    badge.className = `yt-misinfo-card-badge ${isWarning ? "yt-misinfo-card-badge--warning" : "yt-misinfo-card-badge--danger"}`;
+    if (isWarning) {
+      badge.style.color = "var(--yt-misinfo-yellow)";
+    } else {
+      badge.style.color = "var(--yt-misinfo-red)";
+    }
+    const badgeIconColor = isWarning ? "var(--yt-misinfo-yellow)" : "currentColor";
+    const badgeText = hasScore ? claim.score >= 4 ? `Error Warning (Score: ${claim.score})` : `Warning (Score: ${claim.score})` : "Misinformation Alert";
     badge.innerHTML = `
-    <svg class="yt-misinfo-icon" viewBox="0 0 24 24" width="16" height="16">
+    <svg class="yt-misinfo-icon" viewBox="0 0 24 24" width="16" height="16" style="color: ${badgeIconColor}">
       <path d="M12 2L1 21h22L12 2zm0 3.5L20 19H4L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z" fill="currentColor"/>
     </svg>
-    <span class="yt-misinfo-card-badge-text">Misinformation Alert</span>
+    <span class="yt-misinfo-card-badge-text">${badgeText}</span>
   `;
     const dismissBtn = document.createElement("button");
     dismissBtn.type = "button";
@@ -1916,8 +1926,12 @@
       }
       if (this.emptyStateElement) this.emptyStateElement.classList.add("yt-misinfo-hidden");
       filtered.forEach((claim) => {
+        const hasScore = typeof claim.score === "number";
+        const isDanger = hasScore ? claim.score >= 4 : claim.verdict === "misinformation";
+        const isWarning = hasScore && claim.score < 4;
         const card = document.createElement("article");
-        card.className = `yt-misinfo-timeline-card yt-misinfo-card yt-misinfo-timeline-card--${claim.verdict}`;
+        const scoreCardClass = hasScore ? isDanger ? "yt-misinfo-timeline-card--danger" : "yt-misinfo-timeline-card--warning" : `yt-misinfo-timeline-card--${claim.verdict}`;
+        card.className = `yt-misinfo-timeline-card yt-misinfo-card ${scoreCardClass} yt-misinfo-timeline-card--${claim.verdict || "unknown"}`;
         card.setAttribute("role", "listitem");
         card.setAttribute("tabindex", "0");
         card.dataset.timestamp = String(claim.timestamp);
@@ -1932,11 +1946,18 @@
         tsPill.className = "yt-misinfo-ts-pill";
         tsPill.title = `Jump to ${formatTimestamp(claim.timestamp)}`;
         tsPill.textContent = `\u25B6 ${formatTimestamp(claim.timestamp)}`;
-        const badge = document.createElement("span");
-        badge.className = `yt-misinfo-badge yt-misinfo-badge--${claim.verdict} badge-${claim.verdict}`;
-        badge.textContent = claim.verdict === "misinformation" ? "Misinformation" : claim.verdict === "verified" ? "Verified" : "Unverified";
         topRow.appendChild(tsPill);
-        topRow.appendChild(badge);
+        if (hasScore) {
+          const badge = document.createElement("span");
+          badge.className = `yt-misinfo-badge ${isDanger ? "yt-misinfo-badge--danger" : "yt-misinfo-badge--warning"}`;
+          badge.textContent = `Score: ${claim.score}`;
+          topRow.appendChild(badge);
+        } else {
+          const badge = document.createElement("span");
+          badge.className = `yt-misinfo-badge yt-misinfo-badge--${claim.verdict} badge-${claim.verdict}`;
+          badge.textContent = claim.verdict === "misinformation" ? "Misinformation" : claim.verdict === "verified" ? "Verified" : "Unverified";
+          topRow.appendChild(badge);
+        }
         const quote = document.createElement("p");
         quote.className = "yt-misinfo-card-quote";
         quote.textContent = `\u201C${claim.sentence}\u201D`;
