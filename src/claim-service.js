@@ -475,6 +475,427 @@ export const SEEDED_CLAIMS = {
       ],
       duration: 6.5
     }
+  ],
+
+  // Climate Change: What Do Scientists Say? (PragerU)
+  'OwqIy8Ikv-c': [
+    {
+      timestamp: 7.9,
+      sentence: 'For 30 years I taught at MIT, during which time the climate has changed remarkably little.',
+      verdict: 'misinformation',
+      explanation: 'Global instrumental surface temperature records (NASA GISS, NOAA, Hadley Centre) show continuous, statistically significant global warming of over 0.6°C during that 30-year period alone.',
+      sources: [
+        'https://science.feedback.org/review/video-from-prageru-makes-several-incorrect-and-misleading-claims-about-climate-change-richard-lindzen',
+        'https://climate.nasa.gov/vital-signs/global-temperature/'
+      ],
+      duration: 5.5,
+      score: 3
+    },
+    {
+      timestamp: 104.7,
+      sentence: 'None of these is fully understood, and there is no evidence that CO2 emissions are the dominant factor.',
+      verdict: 'misinformation',
+      explanation: 'Attribution research and the IPCC Sixth Assessment Report conclude that human-induced greenhouse gas emissions, predominantly CO2, are unequivocally the dominant driver of observed global warming since the mid-20th century.',
+      sources: [
+        'https://climatefeedback.org/evaluation/video-from-prageru-makes-several-incorrect-and-misleading-claims-about-climate-change-richard-lindzen',
+        'https://www.ipcc.ch/report/ar6/wg1/'
+      ],
+      duration: 6.5,
+      score: 3
+    },
+    {
+      timestamp: 134.9,
+      sentence: 'Atmospheric levels of CO2 have been increasing since the end of the Little Ice Age in the 19th century.',
+      verdict: 'verified',
+      explanation: 'Atmospheric CO2 monitoring at Mauna Loa and Antarctic ice core records confirm atmospheric CO2 has risen from pre-industrial levels of ~280 ppm to over 420 ppm today, primarily due to fossil fuel combustion.',
+      sources: [
+        'https://science.nasa.gov/earth/explore/earth-indicators/carbon-dioxide',
+        'https://skepticalscience.com/co2-levels-airborne-fraction-increasing.htm'
+      ],
+      duration: 5.0,
+      score: 0
+    },
+    {
+      timestamp: 174.5,
+      sentence: 'The IPCC acknowledged in its own 2007 report that “The long-term prediction of future climate states is not possible.”',
+      verdict: 'misinformation',
+      explanation: 'This quotes an excerpt out of context from a discussion of chaotic day-to-day weather prediction. The IPCC report specifically evaluates multi-decadal boundary-condition climate projections under defined radiative forcing pathways.',
+      sources: [
+        'https://climatefeedback.org/claimreview/prageru-post-by-william-happer-uses-flawed-reasoning-to-claim-that-climate-models-always-fail'
+      ],
+      duration: 6.0,
+      score: 2
+    },
+    {
+      timestamp: 187.2,
+      sentence: 'Most importantly, the scenario that the burning of fossil fuel leads to catastrophe isn’t part of what either group asserts.',
+      verdict: 'unknown',
+      explanation: 'Risk assessments regarding the catastrophic severity of unmitigated warming depend on socio-economic vulnerability, adaptation limits, and regional climate tipping points.',
+      sources: [
+        'https://www.nature.com/articles/s41558-020-00918-5'
+      ],
+      duration: 5.0,
+      score: 1
+    }
+  ],
+
+  // Climate: The Movie — Updated 4K version (Clintel)
+  'zmfRG8-RHEI': [
+    {
+      timestamp: 860.0,
+      sentence: 'The Medieval Warm Period was globally much warmer than the modern era without any fossil fuel emissions.',
+      verdict: 'misinformation',
+      explanation: 'PAGES 2k consortium paleoclimate reconstructions demonstrate that the Medieval Climate Anomaly was regionally heterogeneous, whereas current anthropogenic warming is globally synchronous and warmer than any period in the past 2,000 years.',
+      sources: [
+        'https://www.nature.com/articles/s41586-019-1401-2',
+        'https://science.feedback.org/review/climate-the-movie-relies-on-numerous-false-and-misleading-claims-by-known-climate-contrarians/'
+      ],
+      duration: 6.5,
+      score: 3
+    },
+    {
+      timestamp: 1873.8,
+      sentence: 'Yes I assert, that there is no connection whatsoever, between CO2 and climate change.',
+      verdict: 'misinformation',
+      explanation: 'Researchers have directly measured the enhanced greenhouse effect attributable to rising atmospheric CO2 via ground and satellite spectroscopy, empirically confirming its direct physical forcing on Earth\'s energy balance.',
+      sources: [
+        'https://www.nature.com/articles/nature14240',
+        'https://science.feedback.org/review/climate-the-movie-relies-on-numerous-false-and-misleading-claims-by-known-climate-contrarians/'
+      ],
+      duration: 7.0,
+      score: 3
+    },
+    {
+      timestamp: 2710.0,
+      sentence: 'Surface temperature station networks are corrupted by the urban heat island effect.',
+      verdict: 'misinformation',
+      explanation: 'Independent satellite radiometer soundings (UAH, RSS), ocean sea-surface buoy measurements, and isolated rural weather stations all demonstrate consistent multi-decadal warming trends matching urban station networks.',
+      sources: [
+        'https://journals.ametsoc.org/view/journals/clim/21/24/2008jcli2100.1.xml',
+        'https://climatefeedback.org/claimreview/temperature-records-are-not-distorted-by-urban-heat-islands/'
+      ],
+      duration: 6.0,
+      score: 3
+    }
+  ],
+
+  // Is Genesis History? — Full Film (Is Genesis History?)
+  'UM82qxxskZE': [
+    {
+      timestamp: 1110.0,
+      sentence: 'The Grand Canyon strata were deposited rapidly by a single global flood in a matter of months.',
+      verdict: 'misinformation',
+      explanation: 'Sedimentary facies, distinct alternating marine and terrestrial fossil horizons, desert sand dune cross-bedding (Coconino Sandstone), and erosion unconformities demonstrate millions of years of depositional history, not a single rapid cataclysm.',
+      sources: [
+        'https://www.nps.gov/grca/learn/nature/geologicformations.htm',
+        'https://pubs.usgs.gov/bul/1137j/report.pdf'
+      ],
+      duration: 6.5,
+      score: 3
+    },
+    {
+      timestamp: 2895.0,
+      sentence: 'Radiometric decay rates were dramatically accelerated during Noah’s Flood.',
+      verdict: 'misinformation',
+      explanation: 'Nuclear decay constants are determined by the fundamental weak and strong nuclear forces. An acceleration of radioactive decay by factors of billions would have released immense thermal energy sufficient to boil Earth\'s oceans and vaporize the crust.',
+      sources: [
+        'https://ncse.ngo/radiometric-dating-does-work',
+        'https://www.talkorigins.org/faqs/dalrymple/radiometric_dating.html'
+      ],
+      duration: 6.5,
+      score: 3
+    },
+    {
+      timestamp: 5027.5,
+      sentence: 'We believe that the creation is only thousands of years old, say 6000 years, 7000 years, something like that.',
+      verdict: 'misinformation',
+      explanation: 'Independent radiometric isochron dating of terrestrial zircon crystals, meteorites, and lunar samples establishes that Earth and the Solar System are approximately 4.54 billion years old (± 1%), with independently dated Australian zircons exceeding 4.4 billion years.',
+      sources: [
+        'https://pubs.usgs.gov/gip/geotime/age.html',
+        'https://www.nationalacademies.org/evolution/age-of-earth'
+      ],
+      duration: 7.0,
+      score: 3
+    }
+  ],
+
+  // 830 Miles – World Record – Flat Earth Proof (LoRa) (Taboo Conspiracy)
+  'zZGjO1szbFg': [
+    {
+      timestamp: 25.0,
+      sentence: 'In short this is another world record proof of the Flat Earth; this evidence alone ends the globe.',
+      verdict: 'misinformation',
+      explanation: 'Long-distance radio transmission relies on established radio wave propagation physics. Geodetic surveying, satellite navigation, circumnavigation, and stellar observation indisputably prove Earth is an oblate spheroid.',
+      sources: [
+        'https://oceanservice.noaa.gov/facts/earth-round.html',
+        'https://www.nasa.gov/audience/forstudents/5-8/features/nasa-knows/what-is-earth-58.html'
+      ],
+      duration: 6.0,
+      score: 3
+    },
+    {
+      timestamp: 86.0,
+      sentence: 'It is important to note that UHF does not even allegedly bend with the curvature of the Earth... this was at a distance of 830 miles.',
+      verdict: 'misinformation',
+      explanation: 'Atmospheric refraction and tropospheric ducting across ocean thermal inversions channel UHF/microwave radio signals along atmospheric layers beyond the line-of-sight geometric horizon. Such reception is well-documented propagation physics and does not demonstrate Earth is flat.',
+      sources: [
+        'https://www.weather.gov/media/crh/radarmet/refraction.pdf',
+        'https://en.wikipedia.org/wiki/Tropospheric_propagation#Tropospheric_ducting'
+      ],
+      duration: 7.0,
+      score: 3
+    },
+    {
+      timestamp: 165.0,
+      sentence: 'Assuming an observer height of 20 feet, the signal should have been blocked at 5.5 miles. The only reasonable conclusion: the Earth is flat.',
+      verdict: 'misinformation',
+      explanation: 'Geometric horizon calculations ignore standard atmospheric refraction (k-factor ~ 4/3 or higher in marine ducting conditions), which bends electromagnetic ray paths along the geoid and extends transmission ranges hundreds of miles past the optical horizon.',
+      sources: [
+        'https://www.itu.int/rec/R-REC-P.453/en',
+        'https://www.itu.int/rec/R-REC-P.834/en'
+      ],
+      duration: 6.5,
+      score: 3
+    }
+  ],
+
+  // The Truth about CO2 (PragerU)
+  'WDWEjSDYfxc': [
+    {
+      timestamp: 45.0,
+      sentence: 'Carbon dioxide is plant food, so higher atmospheric levels are purely beneficial for all life on Earth.',
+      verdict: 'misinformation',
+      explanation: 'While elevated CO2 can stimulate photosynthetic carbon assimilation under controlled laboratory conditions, agronomic field studies demonstrate it lowers the protein, zinc, and iron nutritional content of staple grains while worsening climate-induced drought and heat stress.',
+      sources: [
+        'https://www.nature.com/articles/nature13179',
+        'https://science.feedback.org/review/co2-is-plant-food-claims-ignore-the-broader-consequences-of-climate-change-on-agriculture/'
+      ],
+      duration: 6.5,
+      score: 3
+    },
+    {
+      timestamp: 120.0,
+      sentence: 'Photosynthesis uses carbon dioxide, water, and sunlight to produce sugars and oxygen.',
+      verdict: 'verified',
+      explanation: 'Biochemical analysis of chloroplast chlorophyll reactions validates the standard oxygenic photosynthetic equation: 6CO2 + 6H2O + light -> C6H12O6 + 6O2.',
+      sources: [
+        'https://www.khanacademy.org/science/biology/photosynthesis-in-plants'
+      ],
+      duration: 5.0,
+      score: 0
+    },
+    {
+      timestamp: 173.6,
+      sentence: 'During the Cambrian explosion, when multi-cellular life first came on the scene, CO2 levels were as much as 10 times higher than they are today.',
+      verdict: 'misinformation',
+      explanation: 'Multicellular life did not first appear during the Cambrian explosion (~541 Ma). Diverse multicellular Ediacaran organisms (such as Dickinsonia) flourished tens of millions of years earlier (~575 Ma), and multicellular red algae fossils (Bangiomorpha) date back over 1 billion years.',
+      sources: [
+        'https://pmc.ncbi.nlm.nih.gov/articles/PMC4760166/',
+        'https://www.nature.com/articles/nature12726'
+      ],
+      duration: 7.0,
+      score: 3
+    }
+  ],
+
+  // What They Haven’t Told You about Climate Change (PragerU)
+  'RkdbSxyXftc': [
+    {
+      timestamp: 78.4,
+      sentence: 'Thirty million years ago the earth had no ice on it at all.',
+      verdict: 'misinformation',
+      explanation: 'Geological, sedimentological, and oxygen isotope benthic records establish that continental Antarctic glaciation began around 34 million years ago during the Eocene-Oligocene transition, meaning substantial permanent ice sheets were already well-established 30 million years ago.',
+      sources: [
+        'https://www.nature.com/articles/nature01290',
+        'https://www.science.org/doi/10.1126/science.1059412'
+      ],
+      duration: 6.0,
+      score: 3
+    },
+    {
+      timestamp: 145.0,
+      sentence: 'Recent warming is completely within normal natural millennial cyclic variations.',
+      verdict: 'misinformation',
+      explanation: 'Comprehensive paleoclimate temperature reconstructions published in Nature demonstrate that the current rate and spatial extent of warming exceed any natural millennial cyclic variation over the past 2,000 years and the entire Holocene.',
+      sources: [
+        'https://www.nature.com/articles/s41561-019-0400-0',
+        'https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-2/'
+      ],
+      duration: 6.0,
+      score: 3
+    },
+    {
+      timestamp: 210.0,
+      sentence: 'Computer models run by climate scientists predict runaway temperature increases that never materialize.',
+      verdict: 'misinformation',
+      explanation: 'Evaluations of climate models published between 1970 and 2007 demonstrate that historical models skillfully projected subsequent observed surface temperatures within observational uncertainty once actual greenhouse gas forcings were accounted for.',
+      sources: [
+        'https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2019GL085378',
+        'https://www.giss.nasa.gov/research/briefs/2020_hausfather_01/'
+      ],
+      duration: 6.5,
+      score: 3
+    }
+  ],
+
+  // Climate Change: What’s So Alarming? (PragerU)
+  '3PWtaackIJU': [
+    {
+      timestamp: 28.8,
+      sentence: 'Yes, sea levels are rising, but the rise is not accelerating—if anything, two recent papers have shown a small decline in the rate of sea-level increase.',
+      verdict: 'misinformation',
+      explanation: 'Satellite altimeter records and global tide gauge reconstructions show that sea-level rise has accelerated significantly from approximately 1.2–1.7 mm/year during the 20th century to over 3.4–3.7 mm/year since 1993, driven by accelerated melting of Greenland and Antarctic ice sheets and ocean thermal expansion.',
+      sources: [
+        'https://www.nature.com/articles/nature14093',
+        'https://climate.nasa.gov/vital-signs/sea-level/',
+        'https://www.pnas.org/doi/10.1073/pnas.1717312115'
+      ],
+      duration: 7.5,
+      score: 3
+    },
+    {
+      timestamp: 105.0,
+      sentence: 'Extreme weather events such as hurricanes, floods, and droughts have not shown any measurable increase.',
+      verdict: 'misinformation',
+      explanation: 'IPCC Sixth Assessment Report confirms that human-induced climate change is already increasing the frequency and intensity of extreme weather events, including heavy precipitation, heatwaves, and agricultural droughts across most land regions globally.',
+      sources: [
+        'https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-11/',
+        'https://www.nature.com/articles/s41558-021-01092-7'
+      ],
+      duration: 6.5,
+      score: 3
+    },
+    {
+      timestamp: 185.0,
+      sentence: 'Thermal expansion causes water volume to increase as ocean temperatures rise.',
+      verdict: 'verified',
+      explanation: 'Thermodynamics of seawater confirms that rising temperatures increase ocean volume, with thermal expansion accounting for approximately 35-40% of observed global mean sea-level rise over the satellite era.',
+      sources: [
+        'https://www.nature.com/articles/s41558-019-0531-8',
+        'https://www.climate.gov/news-features/understanding-climate/climate-change-global-sea-level'
+      ],
+      duration: 5.5,
+      score: 0
+    }
+  ],
+
+  // Can Climate Models Predict Climate Change? (PragerU)
+  'qZN2jt2cCU4': [
+    {
+      timestamp: 78.5,
+      sentence: 'And I know they don’t work. They haven’t worked in the past. They don’t work now. And it’s hard to imagine when, if ever, they’ll work in the foreseeable future.',
+      verdict: 'misinformation',
+      explanation: 'A rigorous peer-reviewed evaluation published by NASA GISS and university researchers analyzed 17 climate models published between 1970 and 2007, finding that 14 of them accurately predicted subsequent observed global surface warming to within expected statistical boundaries.',
+      sources: [
+        'https://www.giss.nasa.gov/research/briefs/2020_hausfather_01/',
+        'https://agupubs.onlinelibrary.wiley.com/doi/10.1029/2019GL085378'
+      ],
+      duration: 7.0,
+      score: 3
+    },
+    {
+      timestamp: 160.0,
+      sentence: 'Climate models cannot model clouds or aerosols with any mathematical validity.',
+      verdict: 'unknown',
+      explanation: 'While cloud feedback and aerosol indirect radiative forcing remain active areas of research and the largest sources of parametric spread among models, modern Earth system models accurately reproduce observed global cloud distributions and feedback sign constraints.',
+      sources: [
+        'https://www.ipcc.ch/report/ar6/wg1/chapter/chapter-7/',
+        'https://www.pnas.org/doi/10.1073/pnas.2026290118'
+      ],
+      duration: 6.0,
+      score: 1
+    },
+    {
+      timestamp: 230.0,
+      sentence: 'Solar irradiance variations are the true driver of 20th century global temperature shifts.',
+      verdict: 'misinformation',
+      explanation: 'Satellite radiometer measurements since 1978 show total solar irradiance has slightly decreased while global temperatures have rapidly increased. Furthermore, the troposphere is warming while the stratosphere is cooling, a distinct physical fingerprint of greenhouse gas trapping rather than solar warming.',
+      sources: [
+        'https://climate.nasa.gov/causes/',
+        'https://www.pnas.org/doi/10.1073/pnas.2008779117'
+      ],
+      duration: 6.5,
+      score: 3
+    }
+  ],
+
+  // Does God Exist? 4 New Arguments (PragerU)
+  'gIorXcloIac': [
+    {
+      timestamp: 65.0,
+      sentence: 'The Big Bang theory mathematically proves the universe had an absolute beginning ex nihilo from nothing.',
+      verdict: 'unknown',
+      explanation: 'While classical general relativity yields a singularity theorem, modern theoretical physics and quantum cosmology explore pre-Big Bang scenarios (such as string inflation, loop quantum gravity bounce, and quantum tunneling) where the Planck epoch is an active boundary rather than a proven absolute nothingness.',
+      sources: [
+        'https://plato.stanford.edu/entries/cosmology/',
+        'https://www.scientificamerican.com/article/what-happened-before-the-big-bang/'
+      ],
+      duration: 6.5,
+      score: 1
+    },
+    {
+      timestamp: 175.0,
+      sentence: 'Fine-tuning of the cosmological constant to 1 part in 10^120 proves deliberate physical design.',
+      verdict: 'unknown',
+      explanation: 'The cosmological constant discrepancy is an unresolved mystery in theoretical physics. Competing candidate solutions include multiverse anthropic selection, dynamic dark energy scalar fields, and modified quantum gravity formulations.',
+      sources: [
+        'https://physics.aps.org/articles/v11/131',
+        'https://plato.stanford.edu/entries/fine-tuning/'
+      ],
+      duration: 6.0,
+      score: 1
+    },
+    {
+      timestamp: 240.3,
+      sentence: 'Even the lowest life forms have brains and central nervous systems.',
+      verdict: 'misinformation',
+      explanation: 'Sponges (phylum Porifera), placozoans, and single-celled organisms are living animals and organisms that completely lack brains, neurons, and central nervous systems, providing a direct biological refutation to this claim.',
+      sources: [
+        'https://ocean.si.edu/ocean-life/invertebrates/sponges',
+        'https://www.nature.com/articles/s41586-021-03889-8'
+      ],
+      duration: 6.5,
+      score: 3
+    }
+  ],
+
+  // Evolution: Bacteria to Beethoven (PragerU)
+  'DOIbcOoaxuY': [
+    {
+      timestamp: 138.7,
+      sentence: 'DNA stores digital information in a four-character chemical code that directs the assembly of proteins.',
+      verdict: 'verified',
+      explanation: 'Molecular biology confirms that DNA sequences of four nucleotide bases (adenine, cytosine, guanine, thymine) encode amino acid codons that direct ribosomal polypeptide synthesis.',
+      sources: [
+        'https://www.nature.com/scitable/topicpage/dna-is-a-structure-that-encodes-6543806/'
+      ],
+      duration: 5.5,
+      score: 0
+    },
+    {
+      timestamp: 262.9,
+      sentence: 'For every DNA sequence that generates a relatively short functional protein, there are 10 to the 77th power nonfunctional sequences.',
+      verdict: 'misinformation',
+      explanation: 'The 1 in 10^77 figure from Douglas Axe measured mutational sensitivity around one specific beta-lactamase enzyme structure. In contrast, in vitro directed evolution experiments (such as Keefe & Szostak) selected novel functional ATP-binding proteins from an unbiased random sequence library of just 6 × 10^12 candidates, disproving the generalized 1 in 10^77 claim.',
+      sources: [
+        'https://pubmed.ncbi.nlm.nih.gov/11294879/',
+        'https://pubmed.ncbi.nlm.nih.gov/15321723/'
+      ],
+      duration: 7.5,
+      score: 3
+    },
+    {
+      timestamp: 310.0,
+      sentence: 'Natural selection cannot produce major innovations or new functional biological information.',
+      verdict: 'misinformation',
+      explanation: 'Empirical evolutionary genetics documents numerous mechanisms of novel information generation, including gene duplication followed by neo-functionalization (e.g., antifreeze glycoproteins in Antarctic notothenioid fish and nylon-degrading enzymes in Flavobacterium).',
+      sources: [
+        'https://www.pnas.org/doi/10.1073/pnas.94.8.3811',
+        'https://www.nature.com/articles/nrg958'
+      ],
+      duration: 6.5,
+      score: 3
+    }
   ]
 };
 
