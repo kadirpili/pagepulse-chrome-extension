@@ -164,8 +164,11 @@ async function startVideoSession(videoId) {
   teardownSession();
   activeVideoId = videoId;
 
+  // Detect if active video is in Chinese from page title or DOM text
+  const isChinese = typeof document !== 'undefined' && /[\u4e00-\u9fa5]/.test(document.title || '');
+
   try {
-    currentClaims = await getClaimsForVideo(videoId);
+    currentClaims = await getClaimsForVideo(videoId, { isChinese });
   } catch (err) {
     console.error('[YouTube Misinformation Detector] Failed to load claims:', err);
     currentClaims = [];
@@ -252,7 +255,7 @@ function mountStatusIndicator(videoId, count) {
 function onSeeking() {
   isSeeking = true;
   if (overlayManager) {
-    overlayManager.hide();
+    overlayManager.hide(true);
   }
 }
 

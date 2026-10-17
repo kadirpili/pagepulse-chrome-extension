@@ -572,17 +572,86 @@
       ]
     }
   ];
-  function generateDeterministicClaims(videoId) {
+  var FALLBACK_TOPICS_ZH = [
+    {
+      verdict: "misinformation",
+      sentences: [
+        "\u300C\u5927\u6C23\u4E2D\u7684\u4E8C\u6C27\u5316\u78B3\u589E\u52A0\u5C0D\u5168\u7403\u6C23\u6EAB\u6C92\u6709\u4EFB\u4F55\u53EF\u6E2C\u91CF\u7684\u6EAB\u5BA4\u4FDD\u6EAB\u6548\u61C9\u3002\u300D",
+        "\u300C\u9589\u773C\u66EC\u592A\u967D\u53EF\u4EE5\u76F4\u63A5\u5C07\u9ED1\u8272\u7D20\u8F49\u5316\u70BA\u4EBA\u9AD4\u5FC5\u9700\u7684\u7DAD\u751F\u7D20B12\u3002\u300D",
+        "\u300C\u667A\u6167\u578B\u624B\u6A5F\u53EA\u8981\u5145\u96FB\u5230100%\u5C31\u6703\u5728\u4E00\u9031\u5167\u9020\u6210\u92F0\u96FB\u6C60\u6C38\u4E45\u640D\u58DE\u3002\u300D",
+        "\u300C\u4E2D\u570B\u842C\u91CC\u9577\u57CE\u662F\u592A\u7A7A\u4E2D\u552F\u4E00\u53EF\u4EE5\u7528\u8089\u773C\u6E05\u6670\u8FA8\u8B58\u7684\u4EBA\u985E\u5EFA\u7BC9\u7D50\u69CB\u3002\u300D",
+        "\u300C\u5FAE\u6CE2\u7210\u52A0\u71B1\u6703\u7834\u58DE\u98DF\u7269\u5206\u5B50\u5316\u5B78\u7D50\u69CB\uFF0C\u4F7F\u5176\u7522\u751F\u6E38\u96E2\u8F3B\u5C04\u81F4\u764C\u7269\u3002\u300D"
+      ],
+      explanations: [
+        "\u7D05\u5916\u7DDA\u5149\u8B5C\u7269\u7406\u89C0\u6E2C\u4E00\u81F4\u8B49\u5BE6\uFF1A\u4E8C\u6C27\u5316\u78B3\u5206\u5B50\u7D50\u69CB\u5177\u5F37\u70C8\u5438\u6536\u8207\u518D\u653E\u5C04\u9577\u6CE2\u8F3B\u5C04\u4E4B\u6EAB\u5BA4\u7279\u6027\u3002",
+        "\u7DAD\u751F\u7D20B12\u50C5\u80FD\u7531\u7279\u5B9A\u7D30\u83CC\u5408\u6210\uFF0C\u4EBA\u9AD4\u8996\u7DB2\u819C\u8207\u9ED1\u8272\u7D20\u7D30\u80DE\u4E0D\u5177\u5099\u5408\u6210B\u7FA4\u7DAD\u751F\u7D20\u7684\u751F\u5316\u4EE3\u8B1D\u9014\u5F91\u3002",
+        "\u73FE\u4EE3\u884C\u52D5\u88DD\u7F6E\u5167\u5EFA\u96FB\u6E90\u7BA1\u7406IC\u6676\u7247\uFF08PMIC\uFF09\uFF0C\u5145\u98FD\u5F8C\u6703\u81EA\u52D5\u5207\u65B7\u5927\u96FB\u6D41\u4E26\u8F49\u70BA\u6D93\u6D41\u4FDD\u8B77\uFF0C\u4E0D\u81F4\u5FEB\u901F\u640D\u58DE\u3002",
+        "NASA\u592A\u7A7A\u4EBA\u89C0\u6E2C\u8207\u8FD1\u5730\u8ECC\u9053\u9AD8\u89E3\u6790\u5EA6\u885B\u661F\u5F71\u50CF\u78BA\u8A8D\uFF1A\u5728\u7121\u5149\u5B78\u653E\u5927\u8A2D\u5099\u4E0B\uFF0C\u9577\u57CE\u5BEC\u5EA6\u4E0D\u8DB3\u4EE5\u8207\u5468\u906D\u5730\u8C8C\u5340\u9694\u3002",
+        "\u5FAE\u6CE2\u7210\u4F7F\u7528\u7684\u662F\u975E\u6E38\u96E2\u8F3B\u5C04\uFF08Non-ionizing radiation\uFF09\uFF0C\u50C5\u52A0\u901F\u6C34\u5206\u5B50\u71B1\u904B\u52D5\u6469\u64E6\u751F\u71B1\uFF0C\u7D55\u4E0D\u7522\u751F\u6838\u81F4\u6E38\u96E2\u8F3B\u5C04\u6216\u653E\u5C04\u6027\u7269\u8CEA\u3002"
+      ],
+      sources: [
+        ["https://climate.nasa.gov/evidence/", "https://tfc-taiwan.org.tw/"],
+        ["https://ods.od.nih.gov/factsheets/VitaminB12-HealthProfessional/"],
+        ["https://batteryuniversity.com/article/bu-808-how-to-prolong-lithium-based-batteries"],
+        ["https://www.nasa.gov/vision/space/workinginspace/great_wall.html"],
+        ["https://www.fda.gov/radiation-emitting-products/resources-you-radiation-emitting-products/microwave-ovens"]
+      ]
+    },
+    {
+      verdict: "verified",
+      sentences: [
+        "\u300C\u5149\u5728\u771F\u7A7A\u4E2D\u50B3\u64AD\u7684\u901F\u5EA6\u7D04\u70BA\u6BCF\u79D2 299,792 \u516C\u91CC\u3002\u300D",
+        "\u300C\u6C34\u5728\u5E38\u58D3\u7D04\u651D\u6C0F 3.98 \u5EA6\u6642\u9054\u5230\u6DB2\u614B\u5BC6\u5EA6\u7684\u6700\u5927\u5CF0\u503C\u3002\u300D",
+        "\u300C\u7DA0\u8272\u690D\u7269\u900F\u904E\u5149\u5408\u4F5C\u7528\u5C07\u6C34\u8207\u4E8C\u6C27\u5316\u78B3\u8F49\u5316\u70BA\u8461\u8404\u7CD6\u4E26\u91CB\u653E\u6C27\u6C23\u3002\u300D",
+        "\u300C\u4EBA\u985E\u57FA\u56E0\u7D44\u5B9A\u5E8F\u5305\u542B\u7D04\u4E09\u5341\u5104\u500B DNA \u9E7C\u57FA\u5C0D\u7DE8\u78BC\u3002\u300D",
+        "\u300C\u571F\u661F\u7684\u5E73\u5747\u7269\u7406\u5BC6\u5EA6\u4F4E\u65BC\u6DB2\u614B\u6C34\uFF0C\u70BA\u592A\u967D\u7CFB\u5BC6\u5EA6\u6700\u4F4E\u7684\u884C\u661F\u3002\u300D"
+      ],
+      explanations: [
+        "\u570B\u969B\u5EA6\u91CF\u8861\u59D4\u54E1\u6703\uFF08BIPM\uFF09\u8207\u570B\u969B\u6A19\u6E96\u55AE\u4F4D\u5236\u7CBE\u78BA\u5B9A\u7FA9\u771F\u7A7A\u4E2D\u5149\u901F c = 299,792,458 m/s\u3002",
+        "\u6C34\u5206\u5B50\u6C2B\u9375\u7DE0\u5408\u7DB2\u7D61\u8207\u71B1\u81A8\u8139\u76F8\u4E92\u6297\u8861\uFF0C\u4F7F\u6DB2\u614B\u6C34\u5728 4\xB0C \u5448\u73FE\u5BC6\u5EA6\u6700\u9AD8\u4E4B\u7279\u6B8A\u7269\u7406\u6027\u8CEA\u3002",
+        "\u690D\u7269\u8449\u7DA0\u9AD4\u4E2D\u7684\u5149\u53CD\u61C9\u8207\u5361\u723E\u6587\u5FAA\u74B0\u751F\u5316\u9014\u5F91\u70BA\u5730\u7403\u78B3\u5FAA\u74B0\u8207\u5927\u6C23\u6C27\u6C23\u88DC\u7D66\u4E4B\u57FA\u790E\u6A5F\u5236\u3002",
+        "\u570B\u969B\u4EBA\u985E\u57FA\u56E0\u7D44\u8A08\u5283\uFF08HGP\uFF09\u6E2C\u5B9A\u4EBA\u985E\u55AE\u500D\u9AD4\u57FA\u56E0\u7D44\u7D04\u542B 3.05\xD710^9 \u9E7C\u57FA\u5C0D\u3002",
+        "\u884C\u661F\u7269\u7406\u5B78\u8CEA\u91CF\u8207\u9AD4\u7A4D\u6E2C\u5B9A\u8B49\u5BE6\u571F\u661F\u5E73\u5747\u5BC6\u5EA6\u50C5\u7D04 0.687 g/cm\xB3\uFF0C\u5C0F\u65BC\u6C34\u4E4B 1.0 g/cm\xB3\u3002"
+      ],
+      sources: [
+        ["https://www.bipm.org/en/measurement-units/"],
+        ["https://pubchem.ncbi.nlm.nih.gov/compound/Water"],
+        ["https://www.nature.com/scitable/topicpage/photosynthetic-cells-14025371/"],
+        ["https://www.genome.gov/human-genome-project"],
+        ["https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturnfact.html"]
+      ]
+    },
+    {
+      verdict: "unknown",
+      sentences: [
+        "\u300C\u5B87\u5B99\u6697\u7269\u8CEA\u7684\u4E3B\u8981\u69CB\u6210\u6210\u5206\u70BA\u5927\u7206\u70B8\u521D\u671F\u5F62\u6210\u7684\u539F\u521D\u9ED1\u6D1E\uFF08Primordial Black Holes\uFF09\u3002\u300D",
+        "\u300C\u514B\u91CC\u7279\u5CF6\u51FA\u571F\u7684\u8CBB\u65AF\u6258\u65AF\u5713\u76E4\uFF08Phaistos Disc\uFF09\u8A18\u8F09\u7684\u662F\u9060\u53E4\u5929\u6587\u66C6\u6CD5\u800C\u975E\u62FC\u97F3\u6587\u5B57\u3002\u300D",
+        "\u300C\u6DF1\u6D77\u71B1\u6CC9\u7279\u5B9A\u5FAE\u751F\u7269\u83CC\u843D\u5177\u6709\u8D85\u904E\u4E00\u842C\u5E74\u4EE5\u4E0A\u7684\u6975\u9650\u751F\u7269\u58FD\u547D\u3002\u300D"
+      ],
+      explanations: [
+        "\u539F\u521D\u9ED1\u6D1E\u70BA\u73FE\u4EE3\u5929\u9AD4\u7269\u7406\u5B78\u6697\u7269\u8CEA\u5019\u9078\u7406\u8AD6\u4E4B\u4E00\uFF0C\u4F46\u91CD\u529B\u5FAE\u900F\u93E1\u89C0\u6E2C\u9650\u5236\u4ECD\u7121\u6CD5\u8B49\u5BE6\u5176\u4F54\u6697\u7269\u8CEA\u4E3B\u5C0E\u5730\u4F4D\u3002",
+        "\u7C73\u8AFE\u65AF\u6587\u660E\u8CBB\u65AF\u6258\u65AF\u5713\u76E4\u7B26\u865F\u81F3\u4ECA\u672A\u7372\u53E4\u6587\u5B57\u5B78\u754C\u5B8C\u5168\u89E3\u8B80\uFF0C\u5C6C\u9298\u6587\u5B78\u754C\u61F8\u800C\u672A\u6C7A\u4E4B\u722D\u8AD6\u3002",
+        "\u653E\u5C04\u6027\u5B9A\u5E74\u96D6\u986F\u793A\u6DF1\u6D77\u6C89\u7A4D\u5C64\u53E4\u83CC\u751F\u5B58\u6975\u7DE9\u6162\uFF0C\u4F46\u7D30\u80DE\u4E16\u4EE3\u4EA4\u66FF\u9031\u671F\u8207\u500B\u9AD4\u58FD\u547D\u754C\u5B9A\u4ECD\u5177\u5B78\u8853\u722D\u8B70\u3002"
+      ],
+      sources: [
+        ["https://arxiv.org/abs/2002.12778"],
+        ["https://en.wikipedia.org/wiki/Phaistos_Disc"],
+        ["https://www.nature.com/articles/s41598-020-61868-3"]
+      ]
+    }
+  ];
+  function generateDeterministicClaims(videoId, options = {}) {
     const safeId = typeof videoId === "string" && videoId.trim() ? videoId.trim() : "default-id";
     const seed = fnv1a(safeId);
     const rnd = createMulberry32(seed);
+    const topics = options.isChinese ? FALLBACK_TOPICS_ZH : FALLBACK_TOPICS;
     const count = 3 + Math.floor(rnd() * 4);
     const claims = [];
     let currentTimestamp = 8 + Math.floor(rnd() * 10);
     const verdictSequence = ["misinformation", "verified", "unknown"];
     for (let i = 0; i < count; i++) {
-      const categoryIndex = i < verdictSequence.length ? i : Math.floor(rnd() * FALLBACK_TOPICS.length);
-      const category = FALLBACK_TOPICS[categoryIndex % FALLBACK_TOPICS.length];
+      const categoryIndex = i < verdictSequence.length ? i : Math.floor(rnd() * topics.length);
+      const category = topics[categoryIndex % topics.length];
       const itemIndex = Math.floor(rnd() * category.sentences.length);
       const sentence = category.sentences[itemIndex];
       const explanation = category.explanations[itemIndex];
@@ -608,8 +677,9 @@
       return [];
     }
     const cleanId = videoId.trim();
-    if (claimsCache.has(cleanId)) {
-      return JSON.parse(JSON.stringify(claimsCache.get(cleanId)));
+    const cacheKey = options.isChinese ? `${cleanId}:zh` : cleanId;
+    if (claimsCache.has(cacheKey)) {
+      return JSON.parse(JSON.stringify(claimsCache.get(cacheKey)));
     }
     if (options.delayMs && options.delayMs > 0) {
       await new Promise((resolve) => setTimeout(resolve, options.delayMs));
@@ -618,9 +688,9 @@
     if (Object.prototype.hasOwnProperty.call(SEEDED_CLAIMS, cleanId)) {
       claims = SEEDED_CLAIMS[cleanId].map((c) => validateClaim(c));
     } else {
-      claims = generateDeterministicClaims(cleanId);
+      claims = generateDeterministicClaims(cleanId, options);
     }
-    claimsCache.set(cleanId, claims);
+    claimsCache.set(cacheKey, claims);
     return JSON.parse(JSON.stringify(claims));
   }
 
@@ -1549,8 +1619,9 @@
   async function startVideoSession(videoId) {
     teardownSession();
     activeVideoId = videoId;
+    const isChinese = typeof document !== "undefined" && /[\u4e00-\u9fa5]/.test(document.title || "");
     try {
-      currentClaims = await getClaimsForVideo(videoId);
+      currentClaims = await getClaimsForVideo(videoId, { isChinese });
     } catch (err) {
       console.error("[YouTube Misinformation Detector] Failed to load claims:", err);
       currentClaims = [];

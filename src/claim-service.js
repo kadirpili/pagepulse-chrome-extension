@@ -571,16 +571,102 @@ const FALLBACK_TOPICS = [
 ];
 
 /**
+ * Deterministic Chinese sentence topic templates for Chinese video fallbacks.
+ */
+export const FALLBACK_TOPICS_ZH = [
+  {
+    verdict: 'misinformation',
+    sentences: [
+      '「大氣中的二氧化碳增加對全球氣溫沒有任何可測量的溫室保溫效應。」',
+      '「閉眼曬太陽可以直接將黑色素轉化為人體必需的維生素B12。」',
+      '「智慧型手機只要充電到100%就會在一週內造成鋰電池永久損壞。」',
+      '「中國萬里長城是太空中唯一可以用肉眼清晰辨識的人類建築結構。」',
+      '「微波爐加熱會破壞食物分子化學結構，使其產生游離輻射致癌物。」'
+    ],
+    explanations: [
+      '紅外線光譜物理觀測一致證實：二氧化碳分子結構具強烈吸收與再放射長波輻射之溫室特性。',
+      '維生素B12僅能由特定細菌合成，人體視網膜與黑色素細胞不具備合成B群維生素的生化代謝途徑。',
+      '現代行動裝置內建電源管理IC晶片（PMIC），充飽後會自動切斷大電流並轉為涓流保護，不致快速損壞。',
+      'NASA太空人觀測與近地軌道高解析度衛星影像確認：在無光學放大設備下，長城寬度不足以與周遭地貌區隔。',
+      '微波爐使用的是非游離輻射（Non-ionizing radiation），僅加速水分子熱運動摩擦生熱，絕不產生核致游離輻射或放射性物質。'
+    ],
+    sources: [
+      ['https://climate.nasa.gov/evidence/', 'https://tfc-taiwan.org.tw/'],
+      ['https://ods.od.nih.gov/factsheets/VitaminB12-HealthProfessional/'],
+      ['https://batteryuniversity.com/article/bu-808-how-to-prolong-lithium-based-batteries'],
+      ['https://www.nasa.gov/vision/space/workinginspace/great_wall.html'],
+      ['https://www.fda.gov/radiation-emitting-products/resources-you-radiation-emitting-products/microwave-ovens']
+    ]
+  },
+  {
+    verdict: 'verified',
+    sentences: [
+      '「光在真空中傳播的速度約為每秒 299,792 公里。」',
+      '「水在常壓約攝氏 3.98 度時達到液態密度的最大峰值。」',
+      '「綠色植物透過光合作用將水與二氧化碳轉化為葡萄糖並釋放氧氣。」',
+      '「人類基因組定序包含約三十億個 DNA 鹼基對編碼。」',
+      '「土星的平均物理密度低於液態水，為太陽系密度最低的行星。」'
+    ],
+    explanations: [
+      '國際度量衡委員會（BIPM）與國際標準單位制精確定義真空中光速 c = 299,792,458 m/s。',
+      '水分子氫鍵締合網絡與熱膨脹相互抗衡，使液態水在 4°C 呈現密度最高之特殊物理性質。',
+      '植物葉綠體中的光反應與卡爾文循環生化途徑為地球碳循環與大氣氧氣補給之基礎機制。',
+      '國際人類基因組計劃（HGP）測定人類單倍體基因組約含 3.05×10^9 鹼基對。',
+      '行星物理學質量與體積測定證實土星平均密度僅約 0.687 g/cm³，小於水之 1.0 g/cm³。'
+    ],
+    sources: [
+      ['https://www.bipm.org/en/measurement-units/'],
+      ['https://pubchem.ncbi.nlm.nih.gov/compound/Water'],
+      ['https://www.nature.com/scitable/topicpage/photosynthetic-cells-14025371/'],
+      ['https://www.genome.gov/human-genome-project'],
+      ['https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturnfact.html']
+    ]
+  },
+  {
+    verdict: 'unknown',
+    sentences: [
+      '「宇宙暗物質的主要構成成分為大爆炸初期形成的原初黑洞（Primordial Black Holes）。」',
+      '「克里特島出土的費斯托斯圓盤（Phaistos Disc）記載的是遠古天文曆法而非拼音文字。」',
+      '「深海熱泉特定微生物菌落具有超過一萬年以上的極限生物壽命。」'
+    ],
+    explanations: [
+      '原初黑洞為現代天體物理學暗物質候選理論之一，但重力微透鏡觀測限制仍無法證實其佔暗物質主導地位。',
+      '米諾斯文明費斯托斯圓盤符號至今未獲古文字學界完全解讀，屬銘文學界懸而未決之爭論。',
+      '放射性定年雖顯示深海沉積層古菌生存極緩慢，但細胞世代交替週期與個體壽命界定仍具學術爭議。'
+    ],
+    sources: [
+      ['https://arxiv.org/abs/2002.12778'],
+      ['https://en.wikipedia.org/wiki/Phaistos_Disc'],
+      ['https://www.nature.com/articles/s41598-020-61868-3']
+    ]
+  }
+];
+
+/**
+ * Checks whether text or language hints indicate Chinese language.
+ *
+ * @param {string} [text]
+ * @returns {boolean}
+ */
+export function isChineseLanguage(text) {
+  if (!text || typeof text !== 'string') return false;
+  return /[\u4e00-\u9fa5\u3400-\u4dbf]/.test(text);
+}
+
+/**
  * Generates a reproducible, deterministic list of 3-6 realistic claims
  * for an arbitrary video ID using Mulberry32 PRNG.
  *
  * @param {string} videoId - YouTube video ID.
+ * @param {Object} [options] - Options such as isChinese.
  * @returns {Array<Object>} Array of validated Claim objects.
  */
-export function generateDeterministicClaims(videoId) {
+export function generateDeterministicClaims(videoId, options = {}) {
   const safeId = typeof videoId === 'string' && videoId.trim() ? videoId.trim() : 'default-id';
   const seed = fnv1a(safeId);
   const rnd = createMulberry32(seed);
+
+  const topics = options.isChinese ? FALLBACK_TOPICS_ZH : FALLBACK_TOPICS;
 
   // Number of claims: 3 to 6
   const count = 3 + Math.floor(rnd() * 4);
@@ -593,8 +679,8 @@ export function generateDeterministicClaims(videoId) {
 
   for (let i = 0; i < count; i++) {
     // Pick topic category
-    const categoryIndex = i < verdictSequence.length ? i : Math.floor(rnd() * FALLBACK_TOPICS.length);
-    const category = FALLBACK_TOPICS[categoryIndex % FALLBACK_TOPICS.length];
+    const categoryIndex = i < verdictSequence.length ? i : Math.floor(rnd() * topics.length);
+    const category = topics[categoryIndex % topics.length];
 
     const itemIndex = Math.floor(rnd() * category.sentences.length);
     const sentence = category.sentences[itemIndex];
@@ -638,7 +724,7 @@ export function clearClaimsCache() {
  * Returns seeded dataset for known IDs, or deterministically generated claims for arbitrary IDs.
  *
  * @param {string} videoId - The YouTube video ID.
- * @param {Object} [options] - Optional settings (e.g. simulated delayMs).
+ * @param {Object} [options] - Optional settings (e.g. simulated delayMs, isChinese).
  * @returns {Promise<Array<Object>>} Resolves to an array of validated Claims.
  */
 export async function getClaimsForVideo(videoId, options = {}) {
@@ -647,10 +733,11 @@ export async function getClaimsForVideo(videoId, options = {}) {
   }
 
   const cleanId = videoId.trim();
+  const cacheKey = options.isChinese ? `${cleanId}:zh` : cleanId;
 
   // Check cache first
-  if (claimsCache.has(cleanId)) {
-    return JSON.parse(JSON.stringify(claimsCache.get(cleanId)));
+  if (claimsCache.has(cacheKey)) {
+    return JSON.parse(JSON.stringify(claimsCache.get(cacheKey)));
   }
 
   if (options.delayMs && options.delayMs > 0) {
@@ -662,11 +749,11 @@ export async function getClaimsForVideo(videoId, options = {}) {
   if (Object.prototype.hasOwnProperty.call(SEEDED_CLAIMS, cleanId)) {
     claims = SEEDED_CLAIMS[cleanId].map((c) => validateClaim(c));
   } else {
-    claims = generateDeterministicClaims(cleanId);
+    claims = generateDeterministicClaims(cleanId, options);
   }
 
   // Cache results
-  claimsCache.set(cleanId, claims);
+  claimsCache.set(cacheKey, claims);
 
   // Return deep clone
   return JSON.parse(JSON.stringify(claims));
