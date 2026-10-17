@@ -477,68 +477,6 @@ export const SEEDED_CLAIMS = {
     }
   ],
 
-  // Climate Change: What Do Scientists Say? (PragerU)
-  'OwqIy8Ikv-c': [
-    {
-      timestamp: 7.9,
-      sentence: 'For 30 years I taught at MIT, during which time the climate has changed remarkably little.',
-      verdict: 'misinformation',
-      explanation: 'Global instrumental surface temperature records (NASA GISS, NOAA, Hadley Centre) show continuous, statistically significant global warming of over 0.6°C during that 30-year period alone.',
-      sources: [
-        'https://science.feedback.org/review/video-from-prageru-makes-several-incorrect-and-misleading-claims-about-climate-change-richard-lindzen',
-        'https://climate.nasa.gov/vital-signs/global-temperature/'
-      ],
-      duration: 5.5,
-      score: 3
-    },
-    {
-      timestamp: 104.7,
-      sentence: 'None of these is fully understood, and there is no evidence that CO2 emissions are the dominant factor.',
-      verdict: 'misinformation',
-      explanation: 'Attribution research and the IPCC Sixth Assessment Report conclude that human-induced greenhouse gas emissions, predominantly CO2, are unequivocally the dominant driver of observed global warming since the mid-20th century.',
-      sources: [
-        'https://climatefeedback.org/evaluation/video-from-prageru-makes-several-incorrect-and-misleading-claims-about-climate-change-richard-lindzen',
-        'https://www.ipcc.ch/report/ar6/wg1/'
-      ],
-      duration: 6.5,
-      score: 3
-    },
-    {
-      timestamp: 134.9,
-      sentence: 'Atmospheric levels of CO2 have been increasing since the end of the Little Ice Age in the 19th century.',
-      verdict: 'verified',
-      explanation: 'Atmospheric CO2 monitoring at Mauna Loa and Antarctic ice core records confirm atmospheric CO2 has risen from pre-industrial levels of ~280 ppm to over 420 ppm today, primarily due to fossil fuel combustion.',
-      sources: [
-        'https://science.nasa.gov/earth/explore/earth-indicators/carbon-dioxide',
-        'https://skepticalscience.com/co2-levels-airborne-fraction-increasing.htm'
-      ],
-      duration: 5.0,
-      score: 0
-    },
-    {
-      timestamp: 174.5,
-      sentence: 'The IPCC acknowledged in its own 2007 report that “The long-term prediction of future climate states is not possible.”',
-      verdict: 'misinformation',
-      explanation: 'This quotes an excerpt out of context from a discussion of chaotic day-to-day weather prediction. The IPCC report specifically evaluates multi-decadal boundary-condition climate projections under defined radiative forcing pathways.',
-      sources: [
-        'https://climatefeedback.org/claimreview/prageru-post-by-william-happer-uses-flawed-reasoning-to-claim-that-climate-models-always-fail'
-      ],
-      duration: 6.0,
-      score: 2
-    },
-    {
-      timestamp: 187.2,
-      sentence: 'Most importantly, the scenario that the burning of fossil fuel leads to catastrophe isn’t part of what either group asserts.',
-      verdict: 'unknown',
-      explanation: 'Risk assessments regarding the catastrophic severity of unmitigated warming depend on socio-economic vulnerability, adaptation limits, and regional climate tipping points.',
-      sources: [
-        'https://www.nature.com/articles/s41558-020-00918-5'
-      ],
-      duration: 5.0,
-      score: 1
-    }
-  ],
-
   // Climate: The Movie — Updated 4K version (Clintel)
   'zmfRG8-RHEI': [
     {
