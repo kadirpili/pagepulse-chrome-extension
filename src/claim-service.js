@@ -1081,7 +1081,8 @@ export function generateDeterministicClaims(videoId, options = {}) {
   return claims;
 }
 
-export const DEFAULT_PROD_ENDPOINT = 'https://d3tuhog92nak7r.cloudfront.net/factcheck';
+export const DEFAULT_PROD_ENDPOINT = 'http://127.0.0.1:3000/check';
+export const CLOUDFRONT_ENDPOINT = 'https://d3tuhog92nak7r.cloudfront.net/factcheck';
 export const DEFAULT_AUTH_BEARER = '91b24cc09314aca901d8153cdacd741a730345f394ed61aa20b02ae92ea9b9fb';
 
 // In-memory cache for retrieved claims
@@ -1291,7 +1292,7 @@ export async function fetchClaimsFromBackend(videoId, endpoint = DEFAULT_PROD_EN
   const maxRetries = typeof options.maxRetries === 'number' ? options.maxRetries : 2;
   const initialDelayMs = typeof options.initialDelayMs === 'number' ? options.initialDelayMs : 300;
   const backoffMultiplier = typeof options.backoffMultiplier === 'number' ? options.backoffMultiplier : 2;
-  const timeoutMs = typeof options.timeoutMs === 'number' ? options.timeoutMs : 7000;
+  const timeoutMs = typeof options.timeoutMs === 'number' ? options.timeoutMs : 120000;
   const fetchFn = options.fetchFn || (typeof fetch !== 'undefined' ? fetch : null);
 
   const cleanId = String(videoId).trim();

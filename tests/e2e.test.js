@@ -195,7 +195,7 @@ test('YouTube Misinformation Detector - Real Google Chrome E2E Suite', async (t)
 </body>
 </html>`
         });
-      } else if (reqUrl.includes('cloudfront.net/factcheck')) {
+      } else if (reqUrl.includes('cloudfront.net/factcheck') || reqUrl.includes(':3000/check')) {
         req.respond({
           status: 200,
           headers: {

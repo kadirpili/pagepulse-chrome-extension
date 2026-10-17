@@ -10,6 +10,7 @@ import {
   fetchClaimsFromBackend,
   clearClaimsCache,
   DEFAULT_PROD_ENDPOINT,
+  CLOUDFRONT_ENDPOINT,
   DEFAULT_AUTH_BEARER
 } from '../src/claim-service.js';
 
@@ -419,11 +420,11 @@ test('claim-service: fetchClaimsFromBackend with retries & error handling', asyn
       };
     };
 
-    const claims = await fetchClaimsFromBackend('OwqIy8Ikv-c', DEFAULT_PROD_ENDPOINT, {
+    const claims = await fetchClaimsFromBackend('OwqIy8Ikv-c', CLOUDFRONT_ENDPOINT, {
       fetchFn: mockFetch
     });
 
-    assert.equal(capturedUrl, DEFAULT_PROD_ENDPOINT);
+    assert.equal(capturedUrl, CLOUDFRONT_ENDPOINT);
     assert.equal(capturedOptions.method, 'POST');
     assert.equal(capturedOptions.headers['Content-Type'], 'application/json');
     assert.match(capturedOptions.headers['Authorization'], /Bearer 91b24cc09314aca901d8153cdacd741a730345f394ed61aa20b02ae92ea9b9fb/);
@@ -433,8 +434,34 @@ test('claim-service: fetchClaimsFromBackend with retries & error handling', asyn
     assert.equal(claims[0].verdict, 'misinformation');
   });
 
+  await t.test('local Pila integration: sends url in POST body when connecting to localhost:3000', async () => {
+    let capturedBody = null;
+    let capturedUrl = '';
+    const mockFetch = async (url, opts) => {
+      capturedUrl = url;
+      capturedBody = JSON.parse(opts.body);
+      return {
+        ok: true,
+        status: 200,
+        json: async () => [
+          { timestamp: 174.5, sentence: 'Pila server statement', score: 3.2, sources: ['https://example.com'] }
+        ]
+      };
+    };
+
+    const claims = await fetchClaimsFromBackend('OwqIy8Ikv-c', DEFAULT_PROD_ENDPOINT, {
+      fetchFn: mockFetch
+    });
+
+    assert.equal(capturedUrl, DEFAULT_PROD_ENDPOINT);
+    assert.deepEqual(capturedBody, { url: 'https://www.youtube.com/watch?v=OwqIy8Ikv-c' });
+    assert.equal(claims.length, 1);
+    assert.equal(claims[0].score, 3.2);
+    assert.equal(claims[0].verdict, 'misinformation');
+  });
+
   await t.test('live API integration: fetches real factcheck data for OwqIy8Ikv-c from Cloudfront', async () => {
-    const claims = await fetchClaimsFromBackend('OwqIy8Ikv-c');
+    const claims = await fetchClaimsFromBackend('OwqIy8Ikv-c', CLOUDFRONT_ENDPOINT);
     assert.ok(Array.isArray(claims));
     assert.ok(claims.length >= 5, 'Real API should return factchecked claims');
     assert.ok(typeof claims[0].timestamp === 'number');

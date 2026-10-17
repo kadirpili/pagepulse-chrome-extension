@@ -12,9 +12,9 @@ export const DEFAULT_SETTINGS = Object.freeze({
   enabled: true,
   showOverlays: true,
   filterVerdict: 'all', // 'all' | 'misinformation' | 'verified' | 'unknown'
-  mode: 'prod',         // Default to PROD mode (real fact-check API backend)
-  apiEndpoint: 'https://d3tuhog92nak7r.cloudfront.net/factcheck',
-  apiKey: '91b24cc09314aca901d8153cdacd741a730345f394ed61aa20b02ae92ea9b9fb'
+  mode: 'prod',         // Default to PROD mode (local Pila server on localhost:3000)
+  apiEndpoint: 'http://127.0.0.1:3000/check',
+  apiKey: ''
 });
 
 /**
