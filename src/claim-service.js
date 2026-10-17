@@ -1294,14 +1294,54 @@ export async function fetchClaimsFromBackend(videoId, endpoint = DEFAULT_PROD_EN
   const timeoutMs = typeof options.timeoutMs === 'number' ? options.timeoutMs : 7000;
   const fetchFn = options.fetchFn || (typeof fetch !== 'undefined' ? fetch : null);
 
+  const cleanId = String(videoId).trim();
+  let baseEndpoint = endpoint || DEFAULT_PROD_ENDPOINT;
+  // Safety: NEVER use exampleapi in PROD; fallback to canonical Cloudfront endpoint
+  if (typeof baseEndpoint === 'string' && baseEndpoint.includes('exampleapi.com')) {
+    baseEndpoint = DEFAULT_PROD_ENDPOINT;
+  }
+  const token = options.authToken || DEFAULT_AUTH_BEARER;
+  const method = options.method || 'POST';
+
+  // In Chrome extension context (content script), delegate to background service worker
+  // to avoid page CSP / CORS issues. Falls back to direct fetch if message fails or in Node/worker.
+  if (
+    !options.fetchFn &&
+    !options.isBackground &&
+    typeof chrome !== 'undefined' &&
+    chrome.runtime &&
+    typeof chrome.runtime.sendMessage === 'function'
+  ) {
+    try {
+      const bgResult = await new Promise((resolve) => {
+        chrome.runtime.sendMessage(
+          {
+            action: 'FETCH_CLAIMS',
+            videoId: cleanId,
+            endpoint: baseEndpoint,
+            authToken: token
+          },
+          (response) => {
+            if (chrome.runtime?.lastError || !response || !response.success) {
+              resolve(null);
+            } else {
+              resolve(response.claims);
+            }
+          }
+        );
+      });
+
+      if (Array.isArray(bgResult)) {
+        return bgResult;
+      }
+    } catch {
+      // Fallback to direct fetch below
+    }
+  }
+
   if (!fetchFn) {
     throw new Error('fetch is not available in current environment');
   }
-
-  const cleanId = String(videoId).trim();
-  const baseEndpoint = endpoint || DEFAULT_PROD_ENDPOINT;
-  const token = options.authToken || DEFAULT_AUTH_BEARER;
-  const method = options.method || 'POST';
 
   let lastError = null;
 
@@ -1331,7 +1371,10 @@ export async function fetchClaimsFromBackend(videoId, endpoint = DEFAULT_PROD_EN
 
       if (method === 'POST') {
         headers['Content-Type'] = 'application/json';
-        fetchOptions.body = JSON.stringify({ videoId: cleanId });
+        const isLocalPila = baseEndpoint.includes('127.0.0.1') || baseEndpoint.includes('localhost');
+        fetchOptions.body = isLocalPila
+          ? JSON.stringify({ url: `https://www.youtube.com/watch?v=${cleanId}` })
+          : JSON.stringify({ videoId: cleanId });
       } else {
         const u = new URL(baseEndpoint);
         u.searchParams.set('videoId', cleanId);
@@ -1381,7 +1424,7 @@ export async function fetchClaimsFromBackend(videoId, endpoint = DEFAULT_PROD_EN
 
 /**
  * Asynchronously retrieves claims for a given YouTube video ID.
- * Supports TEST mode (mock/seeded data) and PROD mode (real API backend at exampleapi.com).
+ * Supports TEST mode (mock/seeded data) and PROD mode (real API backend via Cloudfront).
  * Guarantees that the backend API is called strictly once per video ID with in-flight deduplication.
  *
  * @param {string} videoId - The YouTube video ID.
@@ -1395,7 +1438,10 @@ export async function getClaimsForVideo(videoId, options = {}) {
 
   const cleanId = videoId.trim();
   const isProd = options.mode === 'prod';
-  const endpoint = options.apiEndpoint || DEFAULT_PROD_ENDPOINT;
+  let endpoint = options.apiEndpoint || DEFAULT_PROD_ENDPOINT;
+  if (typeof endpoint === 'string' && endpoint.includes('exampleapi.com')) {
+    endpoint = DEFAULT_PROD_ENDPOINT;
+  }
   const cacheKey = `${cleanId}:${isProd ? 'prod' : 'test'}:${endpoint}:${options.isChinese ? 'zh' : 'en'}`;
 
   // 1. Check in-memory cache first (singleton cache per video ID)
@@ -1419,7 +1465,9 @@ export async function getClaimsForVideo(videoId, options = {}) {
 
     if (isProd) {
       try {
+        console.log(`[YouTube Misinfo Detector] PROD Mode: Fetching fact-checks for ${cleanId} from ${endpoint}`);
         claims = await fetchClaimsFromBackend(cleanId, endpoint, options);
+        console.log(`[YouTube Misinfo Detector] PROD Mode: Received ${claims.length} claims for ${cleanId}`);
       } catch (err) {
         console.warn(`[YouTube Misinfo Detector] PROD API fetch error for ${cleanId}: ${err.message}`);
         claims = [];

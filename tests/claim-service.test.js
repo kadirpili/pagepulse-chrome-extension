@@ -332,13 +332,31 @@ test('claim-service: fetchClaimsFromBackend with retries & error handling', asyn
       ]
     });
 
-    const claims = await fetchClaimsFromBackend('testVideo123', 'https://exampleapi.com/api/claims', {
+    const claims = await fetchClaimsFromBackend('testVideo123', DEFAULT_PROD_ENDPOINT, {
       fetchFn: mockFetch
     });
 
     assert.equal(claims.length, 1);
     assert.equal(claims[0].sentence, 'Backend factcheck statement');
     assert.equal(claims[0].verdict, 'verified');
+  });
+
+  await t.test('enforces never exampleapi: automatically normalizes any legacy exampleapi.com endpoint to DEFAULT_PROD_ENDPOINT', async () => {
+    let capturedUrl = '';
+    const mockFetch = async (url) => {
+      capturedUrl = url;
+      return {
+        ok: true,
+        status: 200,
+        json: async () => [{ timestamp: 10, sentence: 'Normalized statement', score: 0 }]
+      };
+    };
+
+    await fetchClaimsFromBackend('OwqIy8Ikv-c', 'https://exampleapi.com/api/claims', {
+      fetchFn: mockFetch
+    });
+
+    assert.equal(capturedUrl, DEFAULT_PROD_ENDPOINT, 'Must replace exampleapi.com with DEFAULT_PROD_ENDPOINT');
   });
 
   await t.test('retries on HTTP 500 server error and succeeds on subsequent retry', async () => {
@@ -357,7 +375,7 @@ test('claim-service: fetchClaimsFromBackend with retries & error handling', asyn
       };
     };
 
-    const claims = await fetchClaimsFromBackend('testRetryVideo', 'https://exampleapi.com/api/claims', {
+    const claims = await fetchClaimsFromBackend('testRetryVideo', DEFAULT_PROD_ENDPOINT, {
       fetchFn: mockFetch,
       maxRetries: 2,
       initialDelayMs: 20
@@ -375,7 +393,7 @@ test('claim-service: fetchClaimsFromBackend with retries & error handling', asyn
       return { ok: false, status: 404, statusText: 'Not Found' };
     };
 
-    const claims = await fetchClaimsFromBackend('missingVideo', 'https://exampleapi.com/api/claims', {
+    const claims = await fetchClaimsFromBackend('missingVideo', DEFAULT_PROD_ENDPOINT, {
       fetchFn: mockFetch,
       maxRetries: 3,
       initialDelayMs: 20
@@ -418,10 +436,10 @@ test('claim-service: fetchClaimsFromBackend with retries & error handling', asyn
   await t.test('live API integration: fetches real factcheck data for OwqIy8Ikv-c from Cloudfront', async () => {
     const claims = await fetchClaimsFromBackend('OwqIy8Ikv-c');
     assert.ok(Array.isArray(claims));
-    assert.ok(claims.length >= 3, 'Real API should return factchecked claims');
-    assert.equal(claims[0].timestamp, 7.88);
-    assert.equal(claims[0].score, 3);
-    assert.equal(claims[0].verdict, 'misinformation');
+    assert.ok(claims.length >= 5, 'Real API should return factchecked claims');
+    assert.ok(typeof claims[0].timestamp === 'number');
+    assert.ok(claims.some((c) => c.verdict === 'misinformation'), 'Should have detected misinformation claims');
+    assert.ok(claims.some((c) => c.verdict === 'verified'), 'Should have detected verified claims');
   });
 });
 

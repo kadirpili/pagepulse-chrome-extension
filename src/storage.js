@@ -12,7 +12,7 @@ export const DEFAULT_SETTINGS = Object.freeze({
   enabled: true,
   showOverlays: true,
   filterVerdict: 'all', // 'all' | 'misinformation' | 'verified' | 'unknown'
-  mode: 'test',         // 'test' (mock/seeded data) | 'prod' (real API backend)
+  mode: 'prod',         // Default to PROD mode (real fact-check API backend)
   apiEndpoint: 'https://d3tuhog92nak7r.cloudfront.net/factcheck',
   apiKey: '91b24cc09314aca901d8153cdacd741a730345f394ed61aa20b02ae92ea9b9fb'
 });
@@ -52,20 +52,31 @@ export function setMemoryStore(data) {
 
 /**
  * Retrieves the current extension settings, merging with defaults.
- * @returns {Promise<{ enabled: boolean, showOverlays: boolean, filterVerdict: string }>}
+ * @returns {Promise<{ enabled: boolean, showOverlays: boolean, filterVerdict: string, mode: string, apiEndpoint: string, apiKey: string }>}
  */
 export async function getSettings() {
+  let settings;
   if (hasChromeStorage()) {
-    return new Promise((resolve) => {
+    settings = await new Promise((resolve) => {
       chrome.storage.local.get([STORAGE_KEYS.SETTINGS], (result) => {
         const saved = result && result[STORAGE_KEYS.SETTINGS];
         resolve({ ...DEFAULT_SETTINGS, ...(saved || {}) });
       });
     });
+  } else {
+    const saved = memoryStore[STORAGE_KEYS.SETTINGS];
+    settings = { ...DEFAULT_SETTINGS, ...(saved || {}) };
   }
 
-  const saved = memoryStore[STORAGE_KEYS.SETTINGS];
-  return { ...DEFAULT_SETTINGS, ...(saved || {}) };
+  // Safety: NEVER allow exampleapi in PROD; sanitize legacy stored values
+  if (!settings.apiEndpoint || settings.apiEndpoint.includes('exampleapi.com')) {
+    settings.apiEndpoint = DEFAULT_SETTINGS.apiEndpoint;
+    if (hasChromeStorage()) {
+      chrome.storage.local.set({ [STORAGE_KEYS.SETTINGS]: settings });
+    }
+  }
+
+  return settings;
 }
 
 /**
@@ -100,7 +111,8 @@ export async function saveSettings(partial) {
     }
   }
   if (typeof partial.apiEndpoint === 'string' && partial.apiEndpoint.trim().length > 0) {
-    updated.apiEndpoint = partial.apiEndpoint.trim();
+    const trimmed = partial.apiEndpoint.trim();
+    updated.apiEndpoint = trimmed.includes('exampleapi.com') ? DEFAULT_SETTINGS.apiEndpoint : trimmed;
   }
   if (typeof partial.apiKey === 'string') {
     updated.apiKey = partial.apiKey.trim();

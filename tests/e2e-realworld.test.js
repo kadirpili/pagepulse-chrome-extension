@@ -31,11 +31,24 @@ test('YouTube Misinformation Detector - Real-World Scenarios (Tier 4)', async (t
     }
   });
 
+  const setupPageForTestMode = async (page) => {
+    await page.evaluateOnNewDocument(() => {
+      window.chrome = window.chrome || {};
+      window.chrome.storage = {
+        local: {
+          get: (keys, cb) => cb({ yt_misinfo_settings: { mode: 'test', enabled: true, showOverlays: true } }),
+          set: (data, cb) => cb && cb()
+        }
+      };
+    });
+  };
+
   // =========================================================================
   // Scenario 1: Client-Side SPA Navigation Without Page Reload
   // =========================================================================
   await t.test('Scenario 1: Client-side SPA navigation updates session without reload', async () => {
     const page = await browser.newPage();
+    await setupPageForTestMode(page);
     const errorLogs = [];
     page.on('pageerror', (err) => errorLogs.push(err.message));
     page.on('console', (msg) => {
@@ -127,6 +140,7 @@ test('YouTube Misinformation Detector - Real-World Scenarios (Tier 4)', async (t
   // =========================================================================
   await t.test('Scenario 2: Playback progress through multiple claims & active card highlighting', async () => {
     const page = await browser.newPage();
+    await setupPageForTestMode(page);
     const errorLogs = [];
     page.on('pageerror', (err) => errorLogs.push(err.message));
     page.on('console', (msg) => {
@@ -236,6 +250,7 @@ test('YouTube Misinformation Detector - Real-World Scenarios (Tier 4)', async (t
   // =========================================================================
   await t.test('Scenario 3: Overlay auto-dismisses when claim window expires', async () => {
     const page = await browser.newPage();
+    await setupPageForTestMode(page);
     const errorLogs = [];
     page.on('pageerror', (err) => errorLogs.push(err.message));
     page.on('console', (msg) => {
@@ -294,6 +309,7 @@ test('YouTube Misinformation Detector - Real-World Scenarios (Tier 4)', async (t
   // =========================================================================
   await t.test('Scenario 4: Manual dismissal persistence across window and reset on seek', async () => {
     const page = await browser.newPage();
+    await setupPageForTestMode(page);
     const errorLogs = [];
     page.on('pageerror', (err) => errorLogs.push(err.message));
     page.on('console', (msg) => {

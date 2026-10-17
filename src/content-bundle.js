@@ -1150,13 +1150,41 @@
     const backoffMultiplier = typeof options.backoffMultiplier === "number" ? options.backoffMultiplier : 2;
     const timeoutMs = typeof options.timeoutMs === "number" ? options.timeoutMs : 7e3;
     const fetchFn = options.fetchFn || (typeof fetch !== "undefined" ? fetch : null);
+    const cleanId = String(videoId).trim();
+    let baseEndpoint = endpoint || DEFAULT_PROD_ENDPOINT;
+    if (typeof baseEndpoint === "string" && baseEndpoint.includes("exampleapi.com")) {
+      baseEndpoint = DEFAULT_PROD_ENDPOINT;
+    }
+    const token = options.authToken || DEFAULT_AUTH_BEARER;
+    const method = options.method || "POST";
+    if (!options.fetchFn && !options.isBackground && typeof chrome !== "undefined" && chrome.runtime && typeof chrome.runtime.sendMessage === "function") {
+      try {
+        const bgResult = await new Promise((resolve) => {
+          chrome.runtime.sendMessage(
+            {
+              action: "FETCH_CLAIMS",
+              videoId: cleanId,
+              endpoint: baseEndpoint,
+              authToken: token
+            },
+            (response) => {
+              if (chrome.runtime?.lastError || !response || !response.success) {
+                resolve(null);
+              } else {
+                resolve(response.claims);
+              }
+            }
+          );
+        });
+        if (Array.isArray(bgResult)) {
+          return bgResult;
+        }
+      } catch {
+      }
+    }
     if (!fetchFn) {
       throw new Error("fetch is not available in current environment");
     }
-    const cleanId = String(videoId).trim();
-    const baseEndpoint = endpoint || DEFAULT_PROD_ENDPOINT;
-    const token = options.authToken || DEFAULT_AUTH_BEARER;
-    const method = options.method || "POST";
     let lastError = null;
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       let controller = null;
@@ -1180,7 +1208,8 @@
         };
         if (method === "POST") {
           headers["Content-Type"] = "application/json";
-          fetchOptions.body = JSON.stringify({ videoId: cleanId });
+          const isLocalPila = baseEndpoint.includes("127.0.0.1") || baseEndpoint.includes("localhost");
+          fetchOptions.body = isLocalPila ? JSON.stringify({ url: `https://www.youtube.com/watch?v=${cleanId}` }) : JSON.stringify({ videoId: cleanId });
         } else {
           const u = new URL(baseEndpoint);
           u.searchParams.set("videoId", cleanId);
@@ -1224,7 +1253,10 @@
     }
     const cleanId = videoId.trim();
     const isProd = options.mode === "prod";
-    const endpoint = options.apiEndpoint || DEFAULT_PROD_ENDPOINT;
+    let endpoint = options.apiEndpoint || DEFAULT_PROD_ENDPOINT;
+    if (typeof endpoint === "string" && endpoint.includes("exampleapi.com")) {
+      endpoint = DEFAULT_PROD_ENDPOINT;
+    }
     const cacheKey = `${cleanId}:${isProd ? "prod" : "test"}:${endpoint}:${options.isChinese ? "zh" : "en"}`;
     if (claimsCache.has(cacheKey)) {
       return JSON.parse(JSON.stringify(claimsCache.get(cacheKey)));
@@ -1240,7 +1272,9 @@
       let claims = [];
       if (isProd) {
         try {
+          console.log(`[YouTube Misinfo Detector] PROD Mode: Fetching fact-checks for ${cleanId} from ${endpoint}`);
           claims = await fetchClaimsFromBackend(cleanId, endpoint, options);
+          console.log(`[YouTube Misinfo Detector] PROD Mode: Received ${claims.length} claims for ${cleanId}`);
         } catch (err) {
           console.warn(`[YouTube Misinfo Detector] PROD API fetch error for ${cleanId}: ${err.message}`);
           claims = [];
@@ -2038,8 +2072,8 @@
     showOverlays: true,
     filterVerdict: "all",
     // 'all' | 'misinformation' | 'verified' | 'unknown'
-    mode: "test",
-    // 'test' (mock/seeded data) | 'prod' (real API backend)
+    mode: "prod",
+    // Default to PROD mode (real fact-check API backend)
     apiEndpoint: "https://d3tuhog92nak7r.cloudfront.net/factcheck",
     apiKey: "91b24cc09314aca901d8153cdacd741a730345f394ed61aa20b02ae92ea9b9fb"
   });
@@ -2049,16 +2083,25 @@
   var memoryStore = {};
   var memoryListeners = /* @__PURE__ */ new Set();
   async function getSettings() {
+    let settings;
     if (hasChromeStorage()) {
-      return new Promise((resolve) => {
+      settings = await new Promise((resolve) => {
         chrome.storage.local.get([STORAGE_KEYS.SETTINGS], (result) => {
-          const saved2 = result && result[STORAGE_KEYS.SETTINGS];
-          resolve({ ...DEFAULT_SETTINGS, ...saved2 || {} });
+          const saved = result && result[STORAGE_KEYS.SETTINGS];
+          resolve({ ...DEFAULT_SETTINGS, ...saved || {} });
         });
       });
+    } else {
+      const saved = memoryStore[STORAGE_KEYS.SETTINGS];
+      settings = { ...DEFAULT_SETTINGS, ...saved || {} };
     }
-    const saved = memoryStore[STORAGE_KEYS.SETTINGS];
-    return { ...DEFAULT_SETTINGS, ...saved || {} };
+    if (!settings.apiEndpoint || settings.apiEndpoint.includes("exampleapi.com")) {
+      settings.apiEndpoint = DEFAULT_SETTINGS.apiEndpoint;
+      if (hasChromeStorage()) {
+        chrome.storage.local.set({ [STORAGE_KEYS.SETTINGS]: settings });
+      }
+    }
+    return settings;
   }
   function onSettingsChanged(callback) {
     if (typeof callback !== "function") {
