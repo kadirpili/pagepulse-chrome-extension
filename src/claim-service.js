@@ -206,6 +206,70 @@ export const SEEDED_CLAIMS = {
       sources: ['https://developer.mozilla.org/en-US/docs/Learn/HTML/Introduction_to_HTML'],
       duration: 4.5
     }
+  ],
+
+  // AI-generated fake doctor investigation (三立新聞台 - 新聞深一度)
+  RPntCzNp1QU: [
+    {
+      timestamp: 8.0,
+      sentence: '「五年的成功率可以達到 70% 到 80%」— 網路流傳 AI 假醫師影片宣稱特定偏方或非正規植牙技術有極高成功率。',
+      verdict: 'misinformation',
+      explanation:
+        '衛福部與醫界專科醫師嚴正駁斥：正規醫學臨床必須經由實體診斷與嚴謹評估，網傳影片係不肖集團利用 AI 數字人捏造虛假數據，誘騙民眾購買劣質產品或進行未核准療程。',
+      sources: [
+        'https://tfc-taiwan.org.tw/articles/report-ai-fake-doctor',
+        'https://www.mohw.gov.tw/cp-16-75482-1.html'
+      ],
+      duration: 6.0
+    },
+    {
+      timestamp: 32.0,
+      sentence: '「軟骨磨損越嚴重，只要吃這種配方就能完全再生骨骼關節」— AI 影片宣稱骨質與軟骨可單靠不明口服配方完全逆轉。',
+      verdict: 'misinformation',
+      explanation:
+        '骨科專科醫學會指出，重度退化性關節炎軟骨磨損屬不可逆結構退化，任何宣稱單靠特定保健品「完全長回軟骨」皆為誇大不實假訊息。',
+      sources: [
+        'https://www.setn.com/News.aspx?NewsID=1418902',
+        'https://mygopen.com/2024/ai-cartilage-cure.html'
+      ],
+      duration: 6.5
+    },
+    {
+      timestamp: 75.0,
+      sentence: '「影片中的名醫經查證為盜用正牌醫師肖像，或透過 Deepfake 生成之虛擬人物。」',
+      verdict: 'verified',
+      explanation:
+        '事實查核中心及各大醫學中心（包括台大、北榮）多次發布聲明，證實網路多起宣稱名醫代言之養生影片係遭到深偽變臉或完全冒名。',
+      sources: [
+        'https://tfc-taiwan.org.tw/topic/deepfake-health-scams',
+        'https://www.cna.com.tw/news/ahel/202403150218.aspx'
+      ],
+      duration: 5.5
+    },
+    {
+      timestamp: 125.0,
+      sentence: '「網路社群演算法是否全面具備自動過濾 AI 假醫療影片之機制？」',
+      verdict: 'unknown',
+      explanation:
+        '各大社群平台目前主要結合數位浮水印政策與人工檢舉審查，但在面對生成式 AI 每日海量變種影片時，全自動即時攔截防線之涵蓋率仍未達完全覆蓋。',
+      sources: [
+        'https://www.statnews.com/2024/02/ai-generated-medical-misinformation-platforms/',
+        'https://www.who.int/news/item/18-01-2024-ethics-and-governance-of-artificial-intelligence-for-health'
+      ],
+      duration: 6.0
+    },
+    {
+      timestamp: 170.0,
+      sentence: '「民眾接收健康醫療訊息時，應至衛福部醫事查詢系統或各大教學醫院官網求證。」',
+      verdict: 'verified',
+      explanation:
+        '衛福部醫事機構及醫事人員查詢系統可即時查詢合法執業資格，為防範假醫師與幽靈診所最權威之官方查驗管道。',
+      sources: [
+        'https://ma.mohw.gov.tw/masearch/',
+        'https://www.cda.org.tw/'
+      ],
+      duration: 5.0
+    }
   ]
 };
 

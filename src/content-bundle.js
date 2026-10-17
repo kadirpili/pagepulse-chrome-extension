@@ -85,7 +85,7 @@
     }
   }
   function formatTimestamp(seconds) {
-    if (typeof seconds !== "number" || isNaN(seconds) || seconds < 0) {
+    if (typeof seconds !== "number" || isNaN(seconds) || !Number.isFinite(seconds) || seconds < 0) {
       return "00:00";
     }
     const totalSeconds = Math.max(0, Math.floor(seconds));
@@ -251,6 +251,64 @@
         explanation: "HTML (HyperText Markup Language) is a declarative markup specification for document structuring, not a Turing-complete programming language.",
         sources: ["https://developer.mozilla.org/en-US/docs/Learn/HTML/Introduction_to_HTML"],
         duration: 4.5
+      }
+    ],
+    // AI-generated fake doctor investigation (三立新聞台 - 新聞深一度)
+    RPntCzNp1QU: [
+      {
+        timestamp: 8,
+        sentence: "\u300C\u4E94\u5E74\u7684\u6210\u529F\u7387\u53EF\u4EE5\u9054\u5230 70% \u5230 80%\u300D\u2014 \u7DB2\u8DEF\u6D41\u50B3 AI \u5047\u91AB\u5E2B\u5F71\u7247\u5BA3\u7A31\u7279\u5B9A\u504F\u65B9\u6216\u975E\u6B63\u898F\u690D\u7259\u6280\u8853\u6709\u6975\u9AD8\u6210\u529F\u7387\u3002",
+        verdict: "misinformation",
+        explanation: "\u885B\u798F\u90E8\u8207\u91AB\u754C\u5C08\u79D1\u91AB\u5E2B\u56B4\u6B63\u99C1\u65A5\uFF1A\u6B63\u898F\u91AB\u5B78\u81E8\u5E8A\u5FC5\u9808\u7D93\u7531\u5BE6\u9AD4\u8A3A\u65B7\u8207\u56B4\u8B39\u8A55\u4F30\uFF0C\u7DB2\u50B3\u5F71\u7247\u4FC2\u4E0D\u8096\u96C6\u5718\u5229\u7528 AI \u6578\u5B57\u4EBA\u634F\u9020\u865B\u5047\u6578\u64DA\uFF0C\u8A98\u9A19\u6C11\u773E\u8CFC\u8CB7\u52A3\u8CEA\u7522\u54C1\u6216\u9032\u884C\u672A\u6838\u51C6\u7642\u7A0B\u3002",
+        sources: [
+          "https://tfc-taiwan.org.tw/articles/report-ai-fake-doctor",
+          "https://www.mohw.gov.tw/cp-16-75482-1.html"
+        ],
+        duration: 6
+      },
+      {
+        timestamp: 32,
+        sentence: "\u300C\u8EDF\u9AA8\u78E8\u640D\u8D8A\u56B4\u91CD\uFF0C\u53EA\u8981\u5403\u9019\u7A2E\u914D\u65B9\u5C31\u80FD\u5B8C\u5168\u518D\u751F\u9AA8\u9ABC\u95DC\u7BC0\u300D\u2014 AI \u5F71\u7247\u5BA3\u7A31\u9AA8\u8CEA\u8207\u8EDF\u9AA8\u53EF\u55AE\u9760\u4E0D\u660E\u53E3\u670D\u914D\u65B9\u5B8C\u5168\u9006\u8F49\u3002",
+        verdict: "misinformation",
+        explanation: "\u9AA8\u79D1\u5C08\u79D1\u91AB\u5B78\u6703\u6307\u51FA\uFF0C\u91CD\u5EA6\u9000\u5316\u6027\u95DC\u7BC0\u708E\u8EDF\u9AA8\u78E8\u640D\u5C6C\u4E0D\u53EF\u9006\u7D50\u69CB\u9000\u5316\uFF0C\u4EFB\u4F55\u5BA3\u7A31\u55AE\u9760\u7279\u5B9A\u4FDD\u5065\u54C1\u300C\u5B8C\u5168\u9577\u56DE\u8EDF\u9AA8\u300D\u7686\u70BA\u8A87\u5927\u4E0D\u5BE6\u5047\u8A0A\u606F\u3002",
+        sources: [
+          "https://www.setn.com/News.aspx?NewsID=1418902",
+          "https://mygopen.com/2024/ai-cartilage-cure.html"
+        ],
+        duration: 6.5
+      },
+      {
+        timestamp: 75,
+        sentence: "\u300C\u5F71\u7247\u4E2D\u7684\u540D\u91AB\u7D93\u67E5\u8B49\u70BA\u76DC\u7528\u6B63\u724C\u91AB\u5E2B\u8096\u50CF\uFF0C\u6216\u900F\u904E Deepfake \u751F\u6210\u4E4B\u865B\u64EC\u4EBA\u7269\u3002\u300D",
+        verdict: "verified",
+        explanation: "\u4E8B\u5BE6\u67E5\u6838\u4E2D\u5FC3\u53CA\u5404\u5927\u91AB\u5B78\u4E2D\u5FC3\uFF08\u5305\u62EC\u53F0\u5927\u3001\u5317\u69AE\uFF09\u591A\u6B21\u767C\u5E03\u8072\u660E\uFF0C\u8B49\u5BE6\u7DB2\u8DEF\u591A\u8D77\u5BA3\u7A31\u540D\u91AB\u4EE3\u8A00\u4E4B\u990A\u751F\u5F71\u7247\u4FC2\u906D\u5230\u6DF1\u507D\u8B8A\u81C9\u6216\u5B8C\u5168\u5192\u540D\u3002",
+        sources: [
+          "https://tfc-taiwan.org.tw/topic/deepfake-health-scams",
+          "https://www.cna.com.tw/news/ahel/202403150218.aspx"
+        ],
+        duration: 5.5
+      },
+      {
+        timestamp: 125,
+        sentence: "\u300C\u7DB2\u8DEF\u793E\u7FA4\u6F14\u7B97\u6CD5\u662F\u5426\u5168\u9762\u5177\u5099\u81EA\u52D5\u904E\u6FFE AI \u5047\u91AB\u7642\u5F71\u7247\u4E4B\u6A5F\u5236\uFF1F\u300D",
+        verdict: "unknown",
+        explanation: "\u5404\u5927\u793E\u7FA4\u5E73\u53F0\u76EE\u524D\u4E3B\u8981\u7D50\u5408\u6578\u4F4D\u6D6E\u6C34\u5370\u653F\u7B56\u8207\u4EBA\u5DE5\u6AA2\u8209\u5BE9\u67E5\uFF0C\u4F46\u5728\u9762\u5C0D\u751F\u6210\u5F0F AI \u6BCF\u65E5\u6D77\u91CF\u8B8A\u7A2E\u5F71\u7247\u6642\uFF0C\u5168\u81EA\u52D5\u5373\u6642\u6514\u622A\u9632\u7DDA\u4E4B\u6DB5\u84CB\u7387\u4ECD\u672A\u9054\u5B8C\u5168\u8986\u84CB\u3002",
+        sources: [
+          "https://www.statnews.com/2024/02/ai-generated-medical-misinformation-platforms/",
+          "https://www.who.int/news/item/18-01-2024-ethics-and-governance-of-artificial-intelligence-for-health"
+        ],
+        duration: 6
+      },
+      {
+        timestamp: 170,
+        sentence: "\u300C\u6C11\u773E\u63A5\u6536\u5065\u5EB7\u91AB\u7642\u8A0A\u606F\u6642\uFF0C\u61C9\u81F3\u885B\u798F\u90E8\u91AB\u4E8B\u67E5\u8A62\u7CFB\u7D71\u6216\u5404\u5927\u6559\u5B78\u91AB\u9662\u5B98\u7DB2\u6C42\u8B49\u3002\u300D",
+        verdict: "verified",
+        explanation: "\u885B\u798F\u90E8\u91AB\u4E8B\u6A5F\u69CB\u53CA\u91AB\u4E8B\u4EBA\u54E1\u67E5\u8A62\u7CFB\u7D71\u53EF\u5373\u6642\u67E5\u8A62\u5408\u6CD5\u57F7\u696D\u8CC7\u683C\uFF0C\u70BA\u9632\u7BC4\u5047\u91AB\u5E2B\u8207\u5E7D\u9748\u8A3A\u6240\u6700\u6B0A\u5A01\u4E4B\u5B98\u65B9\u67E5\u9A57\u7BA1\u9053\u3002",
+        sources: [
+          "https://ma.mohw.gov.tw/masearch/",
+          "https://www.cda.org.tw/"
+        ],
+        duration: 5
       }
     ]
   };
@@ -475,7 +533,7 @@
     if (typeof document.querySelector === "function") {
       const video = document.querySelector("video.html5-main-video") || document.querySelector("video");
       if (video && typeof video.src === "string" && video.src) {
-        if (video.src.includes("&adformat=") || video.src.includes("googlevideo.com/videoplayback?sparams=.*ad")) {
+        if (video.src.includes("&adformat=") || /googlevideo\.com\/videoplayback\?sparams=.*ad/.test(video.src)) {
           return true;
         }
       }
@@ -658,6 +716,14 @@
       const claimKey = `${activeClaim.timestamp}_${activeClaim.sentence}`;
       if (this.dismissedClaimKey === claimKey) {
         return;
+      }
+      if (this.hideTimeout) {
+        clearTimeout(this.hideTimeout);
+        this.hideTimeout = null;
+        const card = this.container?.querySelector(".yt-misinfo-card");
+        if (card) {
+          card.classList.remove("yt-misinfo-card--hiding");
+        }
       }
       if (this.activeClaim && `${this.activeClaim.timestamp}_${this.activeClaim.sentence}` === claimKey) {
         return;
@@ -1381,7 +1447,7 @@
   function onSeeking() {
     isSeeking = true;
     if (overlayManager) {
-      overlayManager.hide();
+      overlayManager.hide(true);
     }
   }
   function onSeeked() {
