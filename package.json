@@ -1,24 +1,29 @@
 {
-  "name": "pagepulse-chrome-extension",
+  "name": "youtube-misinformation-detector",
   "version": "1.0.0",
-  "description": "PagePulse - Chrome Extension for reading stats, word metrics, and quick notes",
+  "description": "Manifest V3 Chrome Extension detecting real-time misinformation on YouTube videos with interactive timeline drawer",
   "main": "src/background.js",
   "type": "module",
   "scripts": {
-    "test": "node --test tests/stats.test.js tests/storage.test.js",
+    "test": "node --test tests/youtube-url.test.js tests/claim-service.test.js tests/video-tracker.test.js tests/dom-components.test.js",
+    "test:unit": "node --test tests/youtube-url.test.js tests/claim-service.test.js tests/video-tracker.test.js tests/dom-components.test.js",
     "test:e2e": "node tests/e2e.test.js",
-    "test:all": "node --test tests/stats.test.js tests/storage.test.js && node tests/e2e.test.js"
+    "test:all": "npm run test:unit && npm run test:e2e",
+    "lint": "node --check src/*.js popup/*.js tests/*.js",
+    "check": "npm run lint && npm run test:unit"
   },
   "keywords": [
     "chrome-extension",
-    "reading-time",
-    "word-counter",
-    "notes",
+    "youtube",
+    "misinformation",
+    "fact-check",
+    "timeline",
     "manifest-v3"
   ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "esbuild": "^0.28.2",
     "puppeteer": "^25.14.0"
   }
 }

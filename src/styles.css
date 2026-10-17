@@ -1,0 +1,539 @@
+/* ==========================================================================
+   YouTube Real-Time Misinformation Detector - Scoped Styles
+   Uses YouTube official CSS variables (--yt-spec-*) with fallbacks
+   ========================================================================== */
+
+:root {
+  --yt-misinfo-red: #ff4d4f;
+  --yt-misinfo-red-bg: rgba(255, 77, 79, 0.14);
+  --yt-misinfo-red-glow: rgba(255, 77, 79, 0.4);
+  --yt-misinfo-green: #52c41a;
+  --yt-misinfo-green-bg: rgba(82, 196, 26, 0.14);
+  --yt-misinfo-gray: #8c8c8c;
+  --yt-misinfo-gray-bg: rgba(140, 140, 140, 0.14);
+  --yt-misinfo-font: "YouTube Sans", Roboto, Arial, sans-serif;
+}
+
+/* ==========================================================================
+   1. In-Video Warning Overlay inside #movie_player
+   ========================================================================== */
+
+#yt-misinfo-overlay-root.yt-misinfo-overlay-container,
+.yt-misinfo-overlay {
+  position: absolute !important;
+  top: 24px !important;
+  right: 24px !important;
+  z-index: 65 !important;
+  pointer-events: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  max-width: 380px !important;
+  width: calc(100% - 48px) !important;
+  box-sizing: border-box !important;
+  font-family: var(--yt-misinfo-font) !important;
+}
+
+/* Fullscreen mode scaling */
+#movie_player:fullscreen .yt-misinfo-overlay-container,
+#movie_player.ytp-fullscreen .yt-misinfo-overlay-container,
+#movie_player:fullscreen .yt-misinfo-overlay,
+#movie_player.ytp-fullscreen .yt-misinfo-overlay {
+  top: 36px !important;
+  right: 36px !important;
+  max-width: 440px !important;
+}
+
+.yt-misinfo-card {
+  pointer-events: auto !important;
+  background-color: var(--yt-spec-raised-background, rgba(28, 28, 28, 0.95)) !important;
+  color: var(--yt-spec-text-primary, #ffffff) !important;
+  border: 1px solid var(--yt-misinfo-red) !important;
+  border-left: 4px solid var(--yt-misinfo-red) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 12px var(--yt-misinfo-red-glow) !important;
+  padding: 14px 16px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  animation: ytMisinfoSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  transition: opacity 0.18s ease, transform 0.18s ease !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.yt-misinfo-card--hiding {
+  opacity: 0 !important;
+  transform: translateY(-8px) scale(0.96) !important;
+}
+
+@keyframes ytMisinfoSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.yt-misinfo-card-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 8px !important;
+}
+
+.yt-misinfo-card-badge {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: var(--yt-misinfo-red) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+.yt-misinfo-card-dismiss,
+.yt-misinfo-dismiss {
+  background: none !important;
+  border: none !important;
+  color: var(--yt-spec-text-secondary, #aaaaaa) !important;
+  font-size: 20px !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  transition: color 0.15s, background-color 0.15s !important;
+}
+
+.yt-misinfo-card-dismiss:hover,
+.yt-misinfo-dismiss:hover {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+.yt-misinfo-card-meta {
+  margin-bottom: 6px !important;
+}
+
+.yt-misinfo-card-time {
+  display: inline-block !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  color: var(--yt-spec-text-secondary, #aaaaaa) !important;
+  background-color: var(--yt-spec-10-percent-layer, rgba(255, 255, 255, 0.1)) !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+}
+
+.yt-misinfo-card-sentence {
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  margin: 0 0 8px 0 !important;
+  padding-left: 8px !important;
+  border-left: 2px solid var(--yt-spec-text-secondary, #666) !important;
+  font-style: italic !important;
+  color: var(--yt-spec-text-primary, #f1f1f1) !important;
+  word-break: break-word !important;
+}
+
+.yt-misinfo-card-explanation {
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+  color: var(--yt-spec-text-secondary, #cccccc) !important;
+  margin: 0 0 10px 0 !important;
+  word-break: break-word !important;
+}
+
+.yt-misinfo-card-footer {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding-top: 8px !important;
+  border-top: 1px solid var(--yt-spec-10-percent-layer, rgba(255, 255, 255, 0.08)) !important;
+}
+
+.yt-misinfo-card-source,
+.yt-misinfo-source-link {
+  font-size: 11px !important;
+  color: #3ea6ff !important;
+  text-decoration: none !important;
+  max-width: 160px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.yt-misinfo-card-source:hover,
+.yt-misinfo-source-link:hover {
+  text-decoration: underline !important;
+}
+
+.yt-misinfo-card-btn-timeline {
+  background: none !important;
+  border: 1px solid var(--yt-spec-10-percent-layer, rgba(255, 255, 255, 0.2)) !important;
+  color: var(--yt-spec-text-primary, #ffffff) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  padding: 4px 10px !important;
+  border-radius: 12px !important;
+  cursor: pointer !important;
+  transition: background-color 0.15s, border-color 0.15s !important;
+}
+
+.yt-misinfo-card-btn-timeline:hover {
+  background-color: var(--yt-spec-10-percent-layer, rgba(255, 255, 255, 0.15)) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+/* ==========================================================================
+   2. Floating Toggle Tab
+   ========================================================================== */
+
+#yt-misinfo-drawer-tab.yt-misinfo-drawer-tab {
+  position: fixed !important;
+  top: 100px !important;
+  right: 0 !important;
+  z-index: 2001 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background-color: var(--yt-spec-raised-background, #212121) !important;
+  color: var(--yt-spec-text-primary, #ffffff) !important;
+  border: 1px solid var(--yt-spec-10-percent-layer, rgba(255, 255, 255, 0.15)) !important;
+  border-right: none !important;
+  border-radius: 20px 0 0 20px !important;
+  padding: 8px 14px 8px 12px !important;
+  cursor: pointer !important;
+  box-shadow: -2px 4px 12px rgba(0, 0, 0, 0.3) !important;
+  font-family: var(--yt-misinfo-font) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s !important;
+}
+
+#yt-misinfo-drawer-tab:hover {
+  transform: translateX(-4px) !important;
+  background-color: var(--yt-spec-menu-background, #282828) !important;
+}
+
+.yt-misinfo-tab-count {
+  background-color: var(--yt-spec-10-percent-layer, rgba(255, 255, 255, 0.2)) !important;
+  padding: 1px 6px !important;
+  border-radius: 10px !important;
+  font-size: 11px !important;
+}
+
+.yt-misinfo-tab-alert-dot {
+  width: 8px !important;
+  height: 8px !important;
+  background-color: var(--yt-misinfo-red) !important;
+  border-radius: 50% !important;
+  box-shadow: 0 0 6px var(--yt-misinfo-red) !important;
+}
+
+/* ==========================================================================
+   3. Sliding Drawer Panel
+   ========================================================================== */
+
+#yt-misinfo-drawer-panel.yt-misinfo-drawer-panel,
+#yt-misinfo-drawer {
+  position: fixed !important;
+  top: 56px !important;
+  right: 0 !important;
+  width: 360px !important;
+  height: calc(100vh - 56px) !important;
+  z-index: 2000 !important;
+  background-color: var(--yt-spec-base-background, #0f0f0f) !important;
+  color: var(--yt-spec-text-primary, #ffffff) !important;
+  border-left: 1px solid var(--yt-spec-10-percent-layer, rgba(255, 255, 255, 0.1)) !important;
+  box-shadow: -6px 0 20px rgba(0, 0, 0, 0.4) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  font-family: var(--yt-misinfo-font) !important;
+  transform: translateX(0) !important;
+  transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  box-sizing: border-box !important;
+}
+
+#yt-misinfo-drawer-panel.yt-misinfo-drawer-panel--collapsed,
+#yt-misinfo-drawer-panel.is-collapsed,
+#yt-misinfo-drawer.is-collapsed {
+  transform: translateX(100%) !important;
+}
+
+.yt-misinfo-drawer-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding: 14px 16px !important;
+  border-bottom: 1px solid var(--yt-spec-10-percent-layer, rgba(255, 255, 255, 0.1)) !important;
+}
+
+.yt-misinfo-drawer-title-group {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.yt-misinfo-drawer-title {
+  margin: 0 !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: var(--yt-spec-text-primary, #ffffff) !important;
+}
+
+.yt-misinfo-drawer-total-badge {
+  background-color: var(--yt-spec-10-percent-layer, rgba(255, 255, 255, 0.15)) !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  padding: 2px 7px !important;
+  border-radius: 10px !important;
+}
+
+.yt-misinfo-drawer-close,
+.yt-misinfo-drawer-toggle {
+  background: none !important;
+  border: none !important;
+  color: var(--yt-spec-text-secondary, #aaaaaa) !important;
+  font-size: 24px !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  padding: 0 4px !important;
+  border-radius: 4px !important;
+}
+
+.yt-misinfo-drawer-close:hover,
+.yt-misinfo-drawer-toggle:hover {
+  color: #ffffff !important;
+}
+
+/* Filter bar */
+.yt-misinfo-drawer-filters {
+  display: flex !important;
+  gap: 6px !important;
+  padding: 10px 16px !important;
+  border-bottom: 1px solid var(--yt-spec-10-percent-layer, rgba(255, 255, 255, 0.08)) !important;
+  overflow-x: auto !important;
+  scrollbar-width: none !important;
+}
+
+.yt-misinfo-drawer-filters::-webkit-scrollbar {
+  display: none !important;
+}
+
+.yt-misinfo-filter-chip {
+  background-color: var(--yt-spec-10-percent-layer, rgba(255, 255, 255, 0.08)) !important;
+  color: var(--yt-spec-text-secondary, #aaaaaa) !important;
+  border: 1px solid transparent !important;
+  border-radius: 16px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  padding: 5px 12px !important;
+  cursor: pointer !important;
+  white-space: nowrap !important;
+  transition: all 0.15s ease !important;
+}
+
+.yt-misinfo-filter-chip:hover {
+  background-color: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+}
+
+.yt-misinfo-filter-chip--active {
+  background-color: var(--yt-spec-text-primary, #ffffff) !important;
+  color: var(--yt-spec-base-background, #000000) !important;
+  font-weight: 600 !important;
+}
+
+/* Body & Cards List */
+.yt-misinfo-drawer-body {
+  flex: 1 1 auto !important;
+  overflow-y: auto !important;
+  padding: 12px 14px !important;
+}
+
+.yt-misinfo-cards-list {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+}
+
+.yt-misinfo-timeline-card {
+  background-color: var(--yt-spec-raised-background, #1f1f1f) !important;
+  border: 1px solid var(--yt-spec-10-percent-layer, rgba(255, 255, 255, 0.1)) !important;
+  border-left: 3px solid transparent !important;
+  border-radius: 8px !important;
+  padding: 12px !important;
+  cursor: pointer !important;
+  outline: none !important;
+  transition: transform 0.15s, border-color 0.15s, background-color 0.15s !important;
+}
+
+.yt-misinfo-timeline-card:hover {
+  transform: translateY(-1px) !important;
+  background-color: var(--yt-spec-menu-background, #282828) !important;
+}
+
+.yt-misinfo-timeline-card:focus-visible {
+  border-color: #3ea6ff !important;
+}
+
+.yt-misinfo-timeline-card--misinformation {
+  border-left-color: var(--yt-misinfo-red) !important;
+}
+
+.yt-misinfo-timeline-card--verified {
+  border-left-color: var(--yt-misinfo-green) !important;
+}
+
+.yt-misinfo-timeline-card--unknown {
+  border-left-color: var(--yt-misinfo-gray) !important;
+}
+
+/* Active card highlight */
+.yt-misinfo-timeline-card.yt-misinfo-card--active,
+.yt-misinfo-timeline-card.is-active {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border-color: #3ea6ff !important;
+  box-shadow: 0 0 10px rgba(62, 166, 255, 0.3) !important;
+}
+
+.yt-misinfo-card-row-top {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 6px !important;
+}
+
+.yt-misinfo-ts-pill {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  background: var(--yt-spec-10-percent-layer, rgba(255, 255, 255, 0.1)) !important;
+  color: var(--yt-spec-text-primary, #ffffff) !important;
+  border: none !important;
+  border-radius: 4px !important;
+  padding: 3px 6px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+}
+
+.yt-misinfo-ts-pill:hover {
+  background: #3ea6ff !important;
+  color: #000000 !important;
+}
+
+.yt-misinfo-badge {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  padding: 2px 7px !important;
+  border-radius: 4px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.3px !important;
+}
+
+.yt-misinfo-badge--misinformation,
+.badge-misinformation {
+  color: var(--yt-misinfo-red) !important;
+  background-color: var(--yt-misinfo-red-bg) !important;
+  border: 1px solid var(--yt-misinfo-red) !important;
+}
+
+.yt-misinfo-badge--verified,
+.badge-verified {
+  color: var(--yt-misinfo-green) !important;
+  background-color: var(--yt-misinfo-green-bg) !important;
+  border: 1px solid var(--yt-misinfo-green) !important;
+}
+
+.yt-misinfo-badge--unknown,
+.badge-unknown {
+  color: var(--yt-misinfo-gray) !important;
+  background-color: var(--yt-misinfo-gray-bg) !important;
+  border: 1px solid var(--yt-misinfo-gray) !important;
+}
+
+.yt-misinfo-card-quote {
+  font-size: 13px !important;
+  line-height: 1.4 !important;
+  font-weight: 500 !important;
+  margin: 0 0 6px 0 !important;
+  color: var(--yt-spec-text-primary, #ffffff) !important;
+  word-break: break-word !important;
+}
+
+.yt-misinfo-card-desc {
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  color: var(--yt-spec-text-secondary, #aaaaaa) !important;
+  margin: 0 0 8px 0 !important;
+  word-break: break-word !important;
+}
+
+.yt-misinfo-card-sources {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 11px !important;
+}
+
+.yt-misinfo-sources-label {
+  color: var(--yt-spec-text-secondary, #888888) !important;
+}
+
+.yt-misinfo-empty-state {
+  text-align: center !important;
+  padding: 32px 16px !important;
+  color: var(--yt-spec-text-secondary, #888888) !important;
+  font-size: 13px !important;
+}
+
+.yt-misinfo-drawer-footer {
+  padding: 10px 16px !important;
+  border-top: 1px solid var(--yt-spec-10-percent-layer, rgba(255, 255, 255, 0.08)) !important;
+  font-size: 11px !important;
+  color: var(--yt-spec-text-secondary, #777777) !important;
+  text-align: center !important;
+}
+
+.yt-misinfo-hidden {
+  display: none !important;
+}
+
+/* ==========================================================================
+   4. Light Mode Adaptations (html:not([dark]))
+   ========================================================================== */
+
+html:not([dark]) #yt-misinfo-drawer-panel,
+html:not([dark]) #yt-misinfo-drawer {
+  background-color: #ffffff !important;
+  color: #0f0f0f !important;
+  border-left-color: rgba(0, 0, 0, 0.1) !important;
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.1) !important;
+}
+
+html:not([dark]) .yt-misinfo-card {
+  background-color: #ffffff !important;
+  color: #0f0f0f !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+}
+
+html:not([dark]) .yt-misinfo-timeline-card {
+  background-color: #f9f9f9 !important;
+  border-color: #e5e5e5 !important;
+}
+
+html:not([dark]) .yt-misinfo-timeline-card:hover {
+  background-color: #f0f0f0 !important;
+}
+
+html:not([dark]) .yt-misinfo-drawer-tab {
+  background-color: #ffffff !important;
+  color: #0f0f0f !important;
+  border-color: rgba(0, 0, 0, 0.15) !important;
+}

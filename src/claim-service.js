@@ -1,0 +1,417 @@
+/**
+ * Claim Data Service.
+ * Manages claim schema validation, seeded realistic test datasets,
+ * deterministic pseudo-random fallback generation for arbitrary IDs, and cached claim retrieval.
+ */
+
+export const VALID_VERDICTS = Object.freeze(['misinformation', 'verified', 'unknown']);
+
+/**
+ * Validates a raw claim candidate object against the required schema.
+ * Throws a descriptive Error if the object fails validation.
+ *
+ * @param {unknown} raw - The raw claim candidate object.
+ * @returns {Object} The validated and normalized Claim object.
+ */
+export function validateClaim(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    throw new Error('Claim must be a non-null object');
+  }
+
+  // 1. Timestamp validation
+  if (
+    typeof raw.timestamp !== 'number' ||
+    isNaN(raw.timestamp) ||
+    !isFinite(raw.timestamp) ||
+    raw.timestamp < 0
+  ) {
+    throw new Error('Claim timestamp must be a non-negative finite number');
+  }
+
+  // 2. Sentence validation
+  if (typeof raw.sentence !== 'string' || raw.sentence.trim().length === 0) {
+    throw new Error('Claim sentence must be a non-empty string');
+  }
+
+  // 3. Verdict validation
+  if (!raw.verdict || !VALID_VERDICTS.includes(raw.verdict)) {
+    throw new Error(`Claim verdict must be one of: ${VALID_VERDICTS.join(', ')}`);
+  }
+
+  // 4. Explanation validation
+  if (typeof raw.explanation !== 'string') {
+    throw new Error('Claim explanation must be a string');
+  }
+
+  // 5. Sources validation
+  if (!Array.isArray(raw.sources)) {
+    throw new Error('Claim sources must be an array of strings');
+  }
+  for (const src of raw.sources) {
+    if (typeof src !== 'string') {
+      throw new Error('Each source in claim sources must be a string URL');
+    }
+  }
+
+  // 6. Optional duration validation
+  let duration = 4.5;
+  if (
+    typeof raw.duration === 'number' &&
+    !isNaN(raw.duration) &&
+    isFinite(raw.duration) &&
+    raw.duration > 0
+  ) {
+    duration = raw.duration;
+  }
+
+  return {
+    timestamp: Number(raw.timestamp),
+    sentence: String(raw.sentence).trim(),
+    verdict: raw.verdict,
+    explanation: String(raw.explanation).trim(),
+    sources: raw.sources.map((s) => String(s).trim()).filter(Boolean),
+    duration: duration
+  };
+}
+
+/**
+ * Seeded mock datasets for prominent demonstration and test video IDs.
+ */
+export const SEEDED_CLAIMS = {
+  // Rick Astley - Never Gonna Give You Up (Standard Demo ID)
+  dQw4w9WgXcQ: [
+    {
+      timestamp: 12.0,
+      sentence: 'This song was completely improvised in a single take without prior rehearsal.',
+      verdict: 'misinformation',
+      explanation:
+        'The track was meticulously written, arranged, and produced by Stock Aitken Waterman over several weeks at PWL Studios in London.',
+      sources: [
+        'https://www.factcheck.org/2021/music-history-pwl',
+        'https://en.wikipedia.org/wiki/Never_Gonna_Give_You_Up'
+      ],
+      duration: 4.5
+    },
+    {
+      timestamp: 42.5,
+      sentence: 'Never Gonna Give You Up reached number one in 25 countries upon its release in 1987.',
+      verdict: 'verified',
+      explanation:
+        'Official international music record charts confirm the single topped charts in 25 countries worldwide including the UK, US, and Australia.',
+      sources: ['https://www.billboard.com/charts/hot-100/1988-03-12'],
+      duration: 5.0
+    },
+    {
+      timestamp: 88.0,
+      sentence: 'The music video was shot on a multi-million dollar film soundstage in Hollywood.',
+      verdict: 'misinformation',
+      explanation:
+        'The video was directed by Simon West on a shoestring budget of under £3,000 near London Battersea District.',
+      sources: ['https://apnews.com/article/fact-check-astley-video-production'],
+      duration: 4.5
+    },
+    {
+      timestamp: 135.0,
+      sentence: 'Rick Astley originally declined to record the vocal track until persuaded by Pete Waterman.',
+      verdict: 'unknown',
+      explanation:
+        'Historical accounts from studio engineers and producers differ on whether Astley was initially hesitant or eager to record.',
+      sources: ['https://www.reuters.com/fact-check/pwl-studios-retrospective'],
+      duration: 4.0
+    }
+  ],
+
+  // Me at the zoo (First YouTube Video)
+  jNQXAC9IVRw: [
+    {
+      timestamp: 3.0,
+      sentence: 'Elephants have the longest trunks of any terrestrial mammal on Earth.',
+      verdict: 'verified',
+      explanation:
+        'Biological taxonomies confirm that proboscideans possess the largest and longest muscular proboscis among all land mammals.',
+      sources: ['https://nationalzoo.si.edu/animals/asian-elephant'],
+      duration: 4.0
+    },
+    {
+      timestamp: 9.5,
+      sentence: 'The San Diego Zoo currently houses over two million individual elephants.',
+      verdict: 'misinformation',
+      explanation:
+        'The total worldwide population of wild and captive elephants is under 500,000. The San Diego Zoo hosts a small herd of fewer than a dozen.',
+      sources: ['https://sandiegozoowildlifealliance.org/animals/elephant'],
+      duration: 4.5
+    },
+    {
+      timestamp: 15.0,
+      sentence: 'Elephants communicate over long distances using low-frequency infrasound.',
+      verdict: 'verified',
+      explanation:
+        'Bioacoustic field studies demonstrate elephants emit infrasonic rumbles between 14-24 Hz that travel several kilometers.',
+      sources: ['https://www.scientificamerican.com/article/how-elephants-communicate/'],
+      duration: 4.0
+    }
+  ],
+
+  // Dedicated Misinformation Demo ID
+  'demo-misinfo-1': [
+    {
+      timestamp: 5.0,
+      sentence: 'Drinking distilled seawater can cure viral respiratory infections within 24 hours.',
+      verdict: 'misinformation',
+      explanation:
+        'World Health Organization and medical authorities explicitly warn that drinking saline seawater induces severe dehydration and exhibits zero antiviral properties.',
+      sources: [
+        'https://www.who.int/emergencies/diseases/novel-coronavirus-2019/advice-for-public/myth-busters',
+        'https://www.cdc.gov/healthywater/drinking/travel/desalination.html'
+      ],
+      duration: 5.0
+    },
+    {
+      timestamp: 22.0,
+      sentence: 'Hand hygiene with regular soap and water significantly reduces viral pathogen transmission.',
+      verdict: 'verified',
+      explanation:
+        'Peer-reviewed epidemiological investigations show soap molecules disrupt viral lipid bilayer membranes and detach pathogens from skin.',
+      sources: ['https://www.cdc.gov/handwashing/why-handwashing.html'],
+      duration: 4.5
+    },
+    {
+      timestamp: 48.0,
+      sentence: 'Certain rare herbs found only in high-altitude mountain caves provide complete lifelong immunity.',
+      verdict: 'unknown',
+      explanation:
+        'While isolated phytochemical compounds are studied for immunomodulation, there is insufficient clinical evidence to substantiate claims of complete lifelong immunity.',
+      sources: ['https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7158392/'],
+      duration: 5.0
+    }
+  ],
+
+  // YouTube IFrame API Official Demo ID
+  'M7lc1UVf-VE': [
+    {
+      timestamp: 10.0,
+      sentence: 'JavaScript was invented in 1995 in ten days by Brendan Eich at Netscape.',
+      verdict: 'verified',
+      explanation:
+        'Documented computing history confirms Mocha (subsequently renamed LiveScript and JavaScript) was created by Brendan Eich in May 1995.',
+      sources: ['https://www.w3.org/community/webed/wiki/A_Short_History_of_JavaScript'],
+      duration: 4.5
+    },
+    {
+      timestamp: 35.0,
+      sentence: 'HTML is a Turing-complete functional programming language.',
+      verdict: 'misinformation',
+      explanation:
+        'HTML (HyperText Markup Language) is a declarative markup specification for document structuring, not a Turing-complete programming language.',
+      sources: ['https://developer.mozilla.org/en-US/docs/Learn/HTML/Introduction_to_HTML'],
+      duration: 4.5
+    }
+  ]
+};
+
+/**
+ * 32-bit FNV-1a string hashing function.
+ *
+ * @param {string} str
+ * @returns {number} 32-bit unsigned integer hash.
+ */
+function fnv1a(str) {
+  let hash = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    hash ^= str.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+/**
+ * Mulberry32 32-bit pseudo-random number generator.
+ * Highly uniform, deterministic, and fast.
+ *
+ * @param {number} seed - Unsigned 32-bit integer.
+ * @returns {() => number} Returns float in [0, 1).
+ */
+function createMulberry32(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s |= 0;
+    s = (s + 0x6d2b79f5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * Deterministic sentence topic templates for fallback generation.
+ */
+const FALLBACK_TOPICS = [
+  {
+    verdict: 'misinformation',
+    sentences: [
+      'Global atmospheric carbon dioxide has no measurable greenhouse heat-trapping effect.',
+      'Sunlight exposure to closed eyelids converts melanin directly into vitamin B12.',
+      'Charging smartphones to 100% permanently damages lithium batteries within one week.',
+      'The Great Wall of China is clearly visible from low Earth orbit with the unaided naked eye.',
+      'Microwave ovens alter food molecular chemistry into radioactive carcinogens.'
+    ],
+    explanations: [
+      'Spectroscopic physics measurements consistently demonstrate CO2 absorbs and re-emits infrared radiation.',
+      'Vitamin B12 is synthesized exclusively by bacteria; photoreceptors have no biochemical pathway to synthesize B-vitamins.',
+      'Modern smartphones utilize battery management circuits that throttle voltage and prevent overcharging.',
+      'NASA astronaut observations and satellite imagery confirm the Great Wall is indistinguishable from surrounding terrain without optical magnification.',
+      'Microwaves utilize non-ionizing radiation that causes thermal excitation of water molecules without ionizing atomic nuclei.'
+    ],
+    sources: [
+      ['https://climate.nasa.gov/evidence/', 'https://www.ipcc.ch/report/ar6/wg1/'],
+      ['https://ods.od.nih.gov/factsheets/VitaminB12-HealthProfessional/'],
+      ['https://batteryuniversity.com/article/bu-808-how-to-prolong-lithium-based-batteries'],
+      ['https://www.nasa.gov/vision/space/workinginspace/great_wall.html'],
+      ['https://www.fda.gov/radiation-emitting-products/resources-you-radiation-emitting-products/microwave-ovens']
+    ]
+  },
+  {
+    verdict: 'verified',
+    sentences: [
+      'The speed of light in a vacuum is approximately 299,792 kilometers per second.',
+      'Water reaches its maximum density in liquid state at approximately 3.98 degrees Celsius.',
+      'Photosynthesis in green plants converts water and carbon dioxide into glucose and oxygen.',
+      'The human genome contains roughly three billion base pairs of DNA.',
+      'Saturn has a lower average density than liquid water.'
+    ],
+    explanations: [
+      'Standard SI international metrology defines c = 299,792,458 m/s exactly.',
+      'Thermal expansion and hydrogen-bonding lattice structure account for the density peak of liquid water at 4°C.',
+      'Biochemical analysis of chloroplast chlorophyll reactions validates the standard photosynthetic equation.',
+      'The Human Genome Project confirmed the diploid human genome spans approximately 3.1 billion base pairs.',
+      'Astrophysical density models show Saturn mean density is ~0.687 g/cm³, lower than water at 1.0 g/cm³.'
+    ],
+    sources: [
+      ['https://physics.nist.gov/cgi-bin/cuu/Value?c'],
+      ['https://water.usgs.gov/edu/density.html'],
+      ['https://www.khanacademy.org/science/biology/photosynthesis-in-plants'],
+      ['https://www.genome.gov/human-genome-project'],
+      ['https://nssdc.gsfc.nasa.gov/planetary/factsheet/saturnfact.html']
+    ]
+  },
+  {
+    verdict: 'unknown',
+    sentences: [
+      'Dark matter consists predominantly of primordial black holes formed during the Big Bang.',
+      'The Phaistos Disc represents an ancient astronomical calendar rather than a written script.',
+      'Certain deep-sea hydrothermal organisms possess a biological lifespan exceeding ten millennia.'
+    ],
+    explanations: [
+      'While primordial black holes remain an active candidate for dark matter, observational microlensing constraints leave the hypothesis unconfirmed.',
+      'The script and pictograms on the Minoan Phaistos Disc remain undeciphered and subject to debate among epigraphers.',
+      'Radiometric dating of deep benthic colonies suggests extreme longevity, but continuous generational cellular replacement is difficult to quantify.'
+    ],
+    sources: [
+      ['https://arxiv.org/abs/2002.12778'],
+      ['https://en.wikipedia.org/wiki/Phaistos_Disc'],
+      ['https://www.nature.com/articles/s41598-020-61868-3']
+    ]
+  }
+];
+
+/**
+ * Generates a reproducible, deterministic list of 3-6 realistic claims
+ * for an arbitrary video ID using Mulberry32 PRNG.
+ *
+ * @param {string} videoId - YouTube video ID.
+ * @returns {Array<Object>} Array of validated Claim objects.
+ */
+export function generateDeterministicClaims(videoId) {
+  const safeId = typeof videoId === 'string' && videoId.trim() ? videoId.trim() : 'default-id';
+  const seed = fnv1a(safeId);
+  const rnd = createMulberry32(seed);
+
+  // Number of claims: 3 to 6
+  const count = 3 + Math.floor(rnd() * 4);
+  const claims = [];
+
+  let currentTimestamp = 8 + Math.floor(rnd() * 10); // Start between 8s and 17s
+
+  // Ensure balanced verdicts: always at least one misinformation and one verified
+  const verdictSequence = ['misinformation', 'verified', 'unknown'];
+
+  for (let i = 0; i < count; i++) {
+    // Pick topic category
+    const categoryIndex = i < verdictSequence.length ? i : Math.floor(rnd() * FALLBACK_TOPICS.length);
+    const category = FALLBACK_TOPICS[categoryIndex % FALLBACK_TOPICS.length];
+
+    const itemIndex = Math.floor(rnd() * category.sentences.length);
+    const sentence = category.sentences[itemIndex];
+    const explanation = category.explanations[itemIndex];
+    const sources = category.sources[itemIndex] || ['https://factcheck.org/'];
+
+    const duration = 4.0 + Math.round(rnd() * 20) / 10; // 4.0 to 6.0 seconds
+
+    const rawClaim = {
+      timestamp: Math.round(currentTimestamp * 10) / 10,
+      sentence,
+      verdict: category.verdict,
+      explanation,
+      sources,
+      duration
+    };
+
+    claims.push(validateClaim(rawClaim));
+
+    // Space out next claim timestamp: +20 to +45 seconds
+    currentTimestamp += 20 + Math.floor(rnd() * 25);
+  }
+
+  // Sort chronologically ascending
+  claims.sort((a, b) => a.timestamp - b.timestamp);
+  return claims;
+}
+
+// In-memory cache for retrieved claims
+const claimsCache = new Map();
+
+/**
+ * Resets the in-memory claims cache (useful for testing).
+ */
+export function clearClaimsCache() {
+  claimsCache.clear();
+}
+
+/**
+ * Asynchronously retrieves claims for a given YouTube video ID.
+ * Returns seeded dataset for known IDs, or deterministically generated claims for arbitrary IDs.
+ *
+ * @param {string} videoId - The YouTube video ID.
+ * @param {Object} [options] - Optional settings (e.g. simulated delayMs).
+ * @returns {Promise<Array<Object>>} Resolves to an array of validated Claims.
+ */
+export async function getClaimsForVideo(videoId, options = {}) {
+  if (!videoId || typeof videoId !== 'string' || !videoId.trim()) {
+    return [];
+  }
+
+  const cleanId = videoId.trim();
+
+  // Check cache first
+  if (claimsCache.has(cleanId)) {
+    return JSON.parse(JSON.stringify(claimsCache.get(cleanId)));
+  }
+
+  if (options.delayMs && options.delayMs > 0) {
+    await new Promise((resolve) => setTimeout(resolve, options.delayMs));
+  }
+
+  let claims = [];
+
+  if (Object.prototype.hasOwnProperty.call(SEEDED_CLAIMS, cleanId)) {
+    claims = SEEDED_CLAIMS[cleanId].map((c) => validateClaim(c));
+  } else {
+    claims = generateDeterministicClaims(cleanId);
+  }
+
+  // Cache results
+  claimsCache.set(cleanId, claims);
+
+  // Return deep clone
+  return JSON.parse(JSON.stringify(claims));
+}

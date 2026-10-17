@@ -3,155 +3,98 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PagePulse - Reading Stats & Notes</title>
+  <title>YouTube Misinformation Detector</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <div class="app-container">
+  <div class="popup-container">
     <!-- Header -->
-    <header class="app-header">
-      <div class="header-branding">
-        <div class="header-logo">⏱️</div>
+    <header class="popup-header">
+      <div class="popup-brand">
+        <svg class="popup-logo" viewBox="0 0 24 24" width="22" height="22">
+          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" fill="#ff4d4f"/>
+        </svg>
         <div>
-          <h1 class="header-title">PagePulse</h1>
-          <p class="header-subtitle" id="page-host">Loading page...</p>
+          <h1 class="popup-title">Misinfo Detector</h1>
+          <p class="popup-subtitle" id="status-subtitle">Checking page...</p>
         </div>
       </div>
-      <div class="header-actions">
-        <button id="btn-refresh" class="icon-button" title="Refresh stats" aria-label="Refresh stats">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
-          </svg>
-        </button>
-      </div>
+      <span class="status-indicator" id="status-indicator"></span>
     </header>
 
-    <!-- Navigation Tabs -->
-    <nav class="nav-tabs" role="tablist">
-      <button class="tab-btn active" data-tab="stats" role="tab" aria-selected="true">Stats</button>
-      <button class="tab-btn" data-tab="notes" role="tab" aria-selected="false">Notes (<span id="notes-count">0</span>)</button>
-      <button class="tab-btn" data-tab="settings" role="tab" aria-selected="false">Settings</button>
-    </nav>
-
-    <!-- Selection Banner (Shown if text is selected on the page) -->
-    <div id="selection-banner" class="selection-banner hidden">
-      <span>Analyzing selected text</span>
-      <button id="btn-toggle-scope" class="text-button">Switch to full page</button>
-    </div>
-
-    <!-- Main Content Area -->
-    <main class="tab-content">
-      <!-- 1. Stats Panel -->
-      <section id="tab-stats" class="tab-pane active" role="tabpanel">
-        <div class="metrics-grid">
-          <div class="metric-card primary">
-            <div class="metric-label">Reading Time</div>
-            <div class="metric-value" id="val-reading-time">0 min</div>
-            <div class="metric-sub" id="sub-reading-speed">at 200 wpm</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">Words</div>
-            <div class="metric-value" id="val-words">0</div>
-            <div class="metric-sub" id="sub-paragraphs">0 paragraphs</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">Characters</div>
-            <div class="metric-value" id="val-characters">0</div>
-            <div class="metric-sub" id="sub-characters-no-spaces">0 no spaces</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-label">Speaking Time</div>
-            <div class="metric-value" id="val-speaking-time">0 min</div>
-            <div class="metric-sub" id="sub-speaking-speed">at 130 wpm</div>
-          </div>
+    <!-- Master Controls -->
+    <section class="popup-section controls-section">
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <span class="toggle-label">Enable Detector</span>
+          <span class="toggle-desc">Master switch for overlays and drawer</span>
         </div>
+        <label class="switch">
+          <input type="checkbox" id="toggle-enabled" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
 
-        <div class="stats-footer">
-          <button id="btn-copy-stats" class="secondary-btn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-            <span>Copy Stats</span>
-          </button>
-          <span id="copy-toast" class="toast-message hidden">Copied!</span>
+      <div class="toggle-row">
+        <div class="toggle-info">
+          <span class="toggle-label">In-Video Overlays</span>
+          <span class="toggle-desc">Show warning cards during playback</span>
         </div>
-      </section>
+        <label class="switch">
+          <input type="checkbox" id="toggle-overlays" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </section>
 
-      <!-- 2. Notes Panel -->
-      <section id="tab-notes" class="tab-pane" role="tabpanel">
-        <form id="note-form" class="note-input-group">
-          <textarea
-            id="note-input"
-            class="note-textarea"
-            placeholder="Write a quick note for this page..."
-            rows="3"
-            required
-          ></textarea>
-          <div class="note-form-actions">
-            <button type="submit" class="primary-btn">Save Note</button>
-          </div>
-        </form>
+    <!-- Video Claim Stats -->
+    <section class="popup-section stats-section" id="stats-section">
+      <div class="section-header">
+        <h2 class="section-title">Current Video Analysis</h2>
+        <span class="video-id-badge" id="video-id-badge">No video</span>
+      </div>
 
-        <div class="notes-header">
-          <h2 class="section-title">Saved Notes</h2>
-          <div class="notes-filter">
-            <button id="filter-current" class="filter-chip active">This Page</button>
-            <button id="filter-all" class="filter-chip">All Pages</button>
-          </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-total">0</div>
+          <div class="stat-label">Total Claims</div>
         </div>
-
-        <div id="notes-list" class="notes-list">
-          <div class="empty-state">No notes saved for this page yet.</div>
+        <div class="stat-card stat-card--misinfo">
+          <div class="stat-value" id="stat-misinfo">0</div>
+          <div class="stat-label">Misinformation</div>
         </div>
-      </section>
-
-      <!-- 3. Settings Panel -->
-      <section id="tab-settings" class="tab-pane" role="tabpanel">
-        <div class="settings-group">
-          <label class="setting-label" for="setting-reading-wpm">
-            Reading Speed (Words per minute)
-            <span class="setting-value" id="lbl-reading-wpm">200 wpm</span>
-          </label>
-          <input
-            type="range"
-            id="setting-reading-wpm"
-            min="100"
-            max="450"
-            step="10"
-            value="200"
-            class="slider"
-          >
-          <p class="setting-hint">Standard adult silent reading speed is ~200-250 wpm.</p>
+        <div class="stat-card stat-card--verified">
+          <div class="stat-value" id="stat-verified">0</div>
+          <div class="stat-label">Verified</div>
         </div>
-
-        <div class="settings-group">
-          <label class="setting-label" for="setting-speaking-wpm">
-            Speaking Speed (Words per minute)
-            <span class="setting-value" id="lbl-speaking-wpm">130 wpm</span>
-          </label>
-          <input
-            type="range"
-            id="setting-speaking-wpm"
-            min="80"
-            max="250"
-            step="5"
-            value="130"
-            class="slider"
-          >
-          <p class="setting-hint">Normal presentation / conversational speech is ~130-150 wpm.</p>
+        <div class="stat-card stat-card--unknown">
+          <div class="stat-value" id="stat-unknown">0</div>
+          <div class="stat-label">Unverified</div>
         </div>
+      </div>
+    </section>
 
-        <div class="settings-group">
-          <label class="setting-label" for="setting-theme">Theme</label>
-          <select id="setting-theme" class="select-input">
-            <option value="system">System Default</option>
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-          </select>
-        </div>
-      </section>
-    </main>
+    <!-- Empty State (Non-YouTube) -->
+    <section class="popup-section empty-section yt-misinfo-hidden" id="empty-section">
+      <div class="empty-icon">📺</div>
+      <h3 class="empty-title">Not on a YouTube Video</h3>
+      <p class="empty-desc">Open a YouTube video watch page to see real-time fact checks and claims analysis.</p>
+    </section>
+
+    <!-- Filter Preference -->
+    <section class="popup-section filter-section">
+      <label class="setting-label" for="select-filter">Default Timeline Filter</label>
+      <select id="select-filter" class="select-input">
+        <option value="all">Show All Claims</option>
+        <option value="misinformation">Misinformation Only</option>
+        <option value="verified">Verified Only</option>
+        <option value="unknown">Unverified Only</option>
+      </select>
+    </section>
+
+    <footer class="popup-footer">
+      <span>v1.0.0 &bull; Manifest V3</span>
+    </footer>
   </div>
 
   <script type="module" src="popup.js"></script>

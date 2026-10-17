@@ -1,168 +1,140 @@
 /**
- * Storage manager for PagePulse notes and user settings.
- * Abstracted to support chrome.storage.local with an in-memory/localStorage fallback.
+ * Settings and preferences storage manager with dual-mode support:
+ * 1. chrome.storage.local for production Chrome Extension environment.
+ * 2. In-memory store for Node.js unit tests and mock environments.
  */
 
-const STORAGE_KEYS = {
-  NOTES: 'pagepulse_notes',
-  SETTINGS: 'pagepulse_settings'
-};
+export const STORAGE_KEYS = Object.freeze({
+  SETTINGS: 'yt_misinfo_settings'
+});
 
-const DEFAULT_SETTINGS = {
-  readingWpm: 200,
-  speakingWpm: 130,
-  theme: 'system' // 'light' | 'dark' | 'system'
-};
+export const DEFAULT_SETTINGS = Object.freeze({
+  enabled: true,
+  showOverlays: true,
+  filterVerdict: 'all' // 'all' | 'misinformation' | 'verified' | 'unknown'
+});
 
 /**
- * Checks if the chrome.storage.local API is available in the current context.
- *
- * @returns {boolean} True if chrome storage is accessible.
+ * Checks whether chrome.storage.local API is present and functional.
+ * @returns {boolean}
  */
 export function hasChromeStorage() {
   return (
     typeof chrome !== 'undefined' &&
-    chrome.storage &&
-    chrome.storage.local &&
+    Boolean(chrome.storage) &&
+    Boolean(chrome.storage.local) &&
     typeof chrome.storage.local.get === 'function'
   );
 }
 
-// In-memory fallback cache for non-extension environments (e.g. Node tests)
+// In-memory storage for test runners
 let memoryStore = {};
+const memoryListeners = new Set();
 
 /**
- * Reset in-memory store (useful for testing).
+ * Resets the in-memory cache and clears listeners.
  */
 export function resetMemoryStore() {
   memoryStore = {};
+  memoryListeners.clear();
 }
 
 /**
- * Generic getter from storage.
- *
- * @param {string} key
- * @returns {Promise<any>}
+ * Directly seeds in-memory store for testing.
+ * @param {Object} data
  */
-export async function getStorageItem(key) {
-  if (hasChromeStorage()) {
-    return new Promise((resolve) => {
-      chrome.storage.local.get([key], (result) => {
-        resolve(result[key]);
-      });
-    });
-  }
-  return memoryStore[key];
+export function setMemoryStore(data) {
+  memoryStore = { ...data };
 }
 
 /**
- * Generic setter to storage.
- *
- * @param {string} key
- * @param {any} value
- * @returns {Promise<void>}
- */
-export async function setStorageItem(key, value) {
-  if (hasChromeStorage()) {
-    return new Promise((resolve) => {
-      chrome.storage.local.set({ [key]: value }, () => {
-        resolve();
-      });
-    });
-  }
-  memoryStore[key] = value;
-}
-
-/**
- * Retrieves all saved notes.
- *
- * @returns {Promise<Array<Object>>} Array of note objects.
- */
-export async function getAllNotes() {
-  const notes = await getStorageItem(STORAGE_KEYS.NOTES);
-  return Array.isArray(notes) ? notes : [];
-}
-
-/**
- * Retrieves notes for a specific page URL.
- *
- * @param {string} url - Target URL to query.
- * @returns {Promise<Array<Object>>} Notes matching the URL.
- */
-export async function getNotesForUrl(url) {
-  const notes = await getAllNotes();
-  if (!url) return notes;
-
-  // Clean URL by stripping fragments and query parameters if needed, or exact match
-  const cleanUrl = url.split('#')[0];
-  return notes.filter((n) => n.url && n.url.split('#')[0] === cleanUrl);
-}
-
-/**
- * Saves a new note.
- *
- * @param {Object} noteData
- * @param {string} noteData.url - Page URL.
- * @param {string} noteData.title - Page title or note heading.
- * @param {string} noteData.content - Note text content.
- * @returns {Promise<Object>} Created note with id and timestamp.
- */
-export async function saveNote({ url, title, content }) {
-  if (!content || typeof content !== 'string' || content.trim() === '') {
-    throw new Error('Note content cannot be empty.');
-  }
-
-  const notes = await getAllNotes();
-  const newNote = {
-    id: `note_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-    url: url || '',
-    title: (title || 'Untitled Note').trim(),
-    content: content.trim(),
-    createdAt: new Date().toISOString()
-  };
-
-  notes.unshift(newNote);
-  await setStorageItem(STORAGE_KEYS.NOTES, notes);
-  return newNote;
-}
-
-/**
- * Deletes a note by ID.
- *
- * @param {string} noteId - ID of the note to delete.
- * @returns {Promise<boolean>} True if deleted, false if not found.
- */
-export async function deleteNote(noteId) {
-  const notes = await getAllNotes();
-  const filtered = notes.filter((n) => n.id !== noteId);
-
-  if (filtered.length === notes.length) {
-    return false;
-  }
-
-  await setStorageItem(STORAGE_KEYS.NOTES, filtered);
-  return true;
-}
-
-/**
- * Retrieves user settings.
- *
- * @returns {Promise<Object>}
+ * Retrieves the current extension settings, merging with defaults.
+ * @returns {Promise<{ enabled: boolean, showOverlays: boolean, filterVerdict: string }>}
  */
 export async function getSettings() {
-  const saved = await getStorageItem(STORAGE_KEYS.SETTINGS);
+  if (hasChromeStorage()) {
+    return new Promise((resolve) => {
+      chrome.storage.local.get([STORAGE_KEYS.SETTINGS], (result) => {
+        const saved = result && result[STORAGE_KEYS.SETTINGS];
+        resolve({ ...DEFAULT_SETTINGS, ...(saved || {}) });
+      });
+    });
+  }
+
+  const saved = memoryStore[STORAGE_KEYS.SETTINGS];
   return { ...DEFAULT_SETTINGS, ...(saved || {}) };
 }
 
 /**
- * Saves user settings.
- *
- * @param {Object} newSettings
- * @returns {Promise<Object>}
+ * Updates extension settings with partial values and broadcasts changes.
+ * @param {Partial<{ enabled: boolean, showOverlays: boolean, filterVerdict: string }>} partial
+ * @returns {Promise<{ enabled: boolean, showOverlays: boolean, filterVerdict: string }>}
  */
-export async function saveSettings(newSettings) {
+export async function saveSettings(partial) {
+  if (!partial || typeof partial !== 'object') {
+    throw new TypeError('saveSettings requires a settings object.');
+  }
+
   const current = await getSettings();
-  const updated = { ...current, ...newSettings };
-  await setStorageItem(STORAGE_KEYS.SETTINGS, updated);
+  const updated = { ...current };
+
+  if (typeof partial.enabled === 'boolean') {
+    updated.enabled = partial.enabled;
+  }
+  if (typeof partial.showOverlays === 'boolean') {
+    updated.showOverlays = partial.showOverlays;
+  }
+  if (typeof partial.filterVerdict === 'string') {
+    const valid = ['all', 'misinformation', 'verified', 'unknown'];
+    if (valid.includes(partial.filterVerdict)) {
+      updated.filterVerdict = partial.filterVerdict;
+    }
+  }
+
+  if (hasChromeStorage()) {
+    await new Promise((resolve) => {
+      chrome.storage.local.set({ [STORAGE_KEYS.SETTINGS]: updated }, () => {
+        resolve();
+      });
+    });
+  } else {
+    memoryStore[STORAGE_KEYS.SETTINGS] = updated;
+    memoryListeners.forEach((callback) => {
+      try {
+        callback(updated);
+      } catch (err) {
+        console.error('Error in memory settings listener:', err);
+      }
+    });
+  }
+
   return updated;
+}
+
+/**
+ * Registers a change listener that triggers whenever settings are modified.
+ * Returns an unsubscribe cleanup function.
+ * @param {(newSettings: Object) => void} callback
+ * @returns {() => void}
+ */
+export function onSettingsChanged(callback) {
+  if (typeof callback !== 'function') {
+    throw new TypeError('onSettingsChanged callback must be a function.');
+  }
+
+  if (hasChromeStorage() && chrome.storage.onChanged) {
+    const chromeListener = (changes, areaName) => {
+      if (areaName === 'local' && changes[STORAGE_KEYS.SETTINGS]) {
+        const newValue = changes[STORAGE_KEYS.SETTINGS].newValue || DEFAULT_SETTINGS;
+        callback({ ...DEFAULT_SETTINGS, ...newValue });
+      }
+    };
+    chrome.storage.onChanged.addListener(chromeListener);
+    return () => chrome.storage.onChanged.removeListener(chromeListener);
+  }
+
+  memoryListeners.add(callback);
+  return () => {
+    memoryListeners.delete(callback);
+  };
 }

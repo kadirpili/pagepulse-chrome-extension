@@ -1,16 +1,18 @@
 {
   "manifest_version": 3,
-  "name": "PagePulse - Reading Stats & Notes",
+  "name": "YouTube Misinformation Detector",
   "version": "1.0.0",
-  "description": "Real-time reading time, word & character metrics, and quick note-taking for any webpage.",
+  "description": "Real-time misinformation warnings, claim tracking, and interactive timeline drawer for YouTube videos.",
   "permissions": [
-    "activeTab",
     "storage",
-    "scripting"
+    "activeTab"
+  ],
+  "host_permissions": [
+    "*://*.youtube.com/*"
   ],
   "action": {
     "default_popup": "popup/popup.html",
-    "default_title": "PagePulse - View Reading Stats & Notes",
+    "default_title": "YouTube Misinformation Detector",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
@@ -23,9 +25,28 @@
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["src/content.js"],
+      "matches": [
+        "*://*.youtube.com/*"
+      ],
+      "js": [
+        "src/content-bundle.js"
+      ],
+      "css": [
+        "src/styles.css"
+      ],
       "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/*.js",
+        "src/*.css",
+        "icons/*.png"
+      ],
+      "matches": [
+        "*://*.youtube.com/*"
+      ]
     }
   ],
   "icons": {
