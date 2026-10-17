@@ -684,12 +684,36 @@
     return claims;
   }
   var claimsCache = /* @__PURE__ */ new Map();
+  async function fetchClaimsFromBackend(videoId, endpoint = "https://exampleapi.com/api/claims") {
+    const url = `${endpoint}?videoId=${encodeURIComponent(videoId)}`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6e3);
+    try {
+      const res = await fetch(url, {
+        method: "GET",
+        headers: { "Accept": "application/json" },
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      if (!res.ok) {
+        throw new Error(`Production API returned status ${res.status}: ${res.statusText}`);
+      }
+      const json = await res.json();
+      const list = Array.isArray(json) ? json : json?.claims || json?.data || [];
+      return list.map((item) => validateClaim(item));
+    } catch (err) {
+      clearTimeout(timeoutId);
+      console.warn(`[YouTube Misinfo Detector] PROD API request to ${url} failed (${err.message}). Using fallback placeholder.`);
+      throw err;
+    }
+  }
   async function getClaimsForVideo(videoId, options = {}) {
     if (!videoId || typeof videoId !== "string" || !videoId.trim()) {
       return [];
     }
     const cleanId = videoId.trim();
-    const cacheKey = options.isChinese ? `${cleanId}:zh` : cleanId;
+    const isProd = options.mode === "prod";
+    const cacheKey = `${cleanId}:${isProd ? "prod" : "test"}:${options.isChinese ? "zh" : "en"}`;
     if (claimsCache.has(cacheKey)) {
       return JSON.parse(JSON.stringify(claimsCache.get(cacheKey)));
     }
@@ -697,10 +721,19 @@
       await new Promise((resolve) => setTimeout(resolve, options.delayMs));
     }
     let claims = [];
-    if (Object.prototype.hasOwnProperty.call(SEEDED_CLAIMS, cleanId)) {
-      claims = SEEDED_CLAIMS[cleanId].map((c) => validateClaim(c));
+    if (isProd) {
+      try {
+        claims = await fetchClaimsFromBackend(cleanId, options.apiEndpoint);
+      } catch (err) {
+        console.warn(`[YouTube Misinfo Detector] PROD mode active for video ${cleanId}, backend ${options.apiEndpoint || "exampleapi.com"} is a placeholder.`);
+        claims = [];
+      }
     } else {
-      claims = generateDeterministicClaims(cleanId, options);
+      if (Object.prototype.hasOwnProperty.call(SEEDED_CLAIMS, cleanId)) {
+        claims = SEEDED_CLAIMS[cleanId].map((c) => validateClaim(c));
+      } else {
+        claims = generateDeterministicClaims(cleanId, options);
+      }
     }
     claimsCache.set(cacheKey, claims);
     return JSON.parse(JSON.stringify(claims));
@@ -1478,8 +1511,11 @@
   var DEFAULT_SETTINGS = Object.freeze({
     enabled: true,
     showOverlays: true,
-    filterVerdict: "all"
+    filterVerdict: "all",
     // 'all' | 'misinformation' | 'verified' | 'unknown'
+    mode: "test",
+    // 'test' (mock data) | 'prod' (real API backend)
+    apiEndpoint: "https://exampleapi.com/api/claims"
   });
   function hasChromeStorage() {
     return typeof chrome !== "undefined" && Boolean(chrome.storage) && Boolean(chrome.storage.local) && typeof chrome.storage.local.get === "function";
@@ -1633,7 +1669,11 @@
     activeVideoId = videoId;
     const isChinese = typeof document !== "undefined" && /[\u4e00-\u9fa5]/.test(document.title || "");
     try {
-      currentClaims = await getClaimsForVideo(videoId, { isChinese });
+      currentClaims = await getClaimsForVideo(videoId, {
+        isChinese,
+        mode: currentSettings.mode || "test",
+        apiEndpoint: currentSettings.apiEndpoint || "https://exampleapi.com/api/claims"
+      });
     } catch (err) {
       console.error("[YouTube Misinformation Detector] Failed to load claims:", err);
       currentClaims = [];
@@ -1697,9 +1737,11 @@
       });
       document.body.appendChild(indicator);
     }
+    const modeTag = currentSettings.mode === "prod" ? "PROD" : "TEST";
+    const badgeColor = currentSettings.mode === "prod" ? "#52c41a" : "#ff4d4f";
     indicator.innerHTML = `
-    <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ff4d4f;box-shadow:0 0 8px #ff4d4f;animation:ytPulse 1.5s infinite;"></span>
-    <span>\u{1F6E1}\uFE0F Misinfo Detector Active (${count} claims)</span>
+    <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${badgeColor};box-shadow:0 0 8px ${badgeColor};animation:ytPulse 1.5s infinite;"></span>
+    <span>\u{1F6E1}\uFE0F Misinfo Detector Active [${modeTag}] (${count} claims)</span>
   `;
   }
   function onSeeking() {

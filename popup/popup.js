@@ -13,7 +13,8 @@ const dom = {
   statMisinfo: document.getElementById('stat-misinfo'),
   statVerified: document.getElementById('stat-verified'),
   statUnknown: document.getElementById('stat-unknown'),
-  selectFilter: document.getElementById('select-filter')
+  selectFilter: document.getElementById('select-filter'),
+  selectMode: document.getElementById('select-mode')
 };
 
 async function initPopup() {
@@ -21,6 +22,7 @@ async function initPopup() {
   if (dom.toggleEnabled) dom.toggleEnabled.checked = settings.enabled;
   if (dom.toggleOverlays) dom.toggleOverlays.checked = settings.showOverlays;
   if (dom.selectFilter) dom.selectFilter.value = settings.filterVerdict || 'all';
+  if (dom.selectMode) dom.selectMode.value = settings.mode || 'test';
 
   setupEventListeners();
   await queryCurrentTab();
@@ -42,6 +44,12 @@ function setupEventListeners() {
   if (dom.selectFilter) {
     dom.selectFilter.addEventListener('change', async () => {
       await saveSettings({ filterVerdict: dom.selectFilter.value });
+    });
+  }
+
+  if (dom.selectMode) {
+    dom.selectMode.addEventListener('change', async () => {
+      await saveSettings({ mode: dom.selectMode.value });
     });
   }
 }

@@ -733,11 +733,46 @@ export function clearClaimsCache() {
 }
 
 /**
+ * Fetches real claim data from the production API backend.
+ * Uses placeholder exampleapi.com with timeout and graceful error reporting.
+ *
+ * @param {string} videoId
+ * @param {string} [endpoint]
+ * @returns {Promise<Array<Object>>}
+ */
+export async function fetchClaimsFromBackend(videoId, endpoint = 'https://exampleapi.com/api/claims') {
+  const url = `${endpoint}?videoId=${encodeURIComponent(videoId)}`;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+  try {
+    const res = await fetch(url, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      throw new Error(`Production API returned status ${res.status}: ${res.statusText}`);
+    }
+
+    const json = await res.json();
+    const list = Array.isArray(json) ? json : (json?.claims || json?.data || []);
+    return list.map((item) => validateClaim(item));
+  } catch (err) {
+    clearTimeout(timeoutId);
+    console.warn(`[YouTube Misinfo Detector] PROD API request to ${url} failed (${err.message}). Using fallback placeholder.`);
+    throw err;
+  }
+}
+
+/**
  * Asynchronously retrieves claims for a given YouTube video ID.
- * Returns seeded dataset for known IDs, or deterministically generated claims for arbitrary IDs.
+ * Supports TEST mode (mock/seeded data) and PROD mode (real API backend at exampleapi.com).
  *
  * @param {string} videoId - The YouTube video ID.
- * @param {Object} [options] - Optional settings (e.g. simulated delayMs, isChinese).
+ * @param {Object} [options] - Optional settings (e.g. mode: 'test'|'prod', isChinese, delayMs).
  * @returns {Promise<Array<Object>>} Resolves to an array of validated Claims.
  */
 export async function getClaimsForVideo(videoId, options = {}) {
@@ -746,7 +781,8 @@ export async function getClaimsForVideo(videoId, options = {}) {
   }
 
   const cleanId = videoId.trim();
-  const cacheKey = options.isChinese ? `${cleanId}:zh` : cleanId;
+  const isProd = options.mode === 'prod';
+  const cacheKey = `${cleanId}:${isProd ? 'prod' : 'test'}:${options.isChinese ? 'zh' : 'en'}`;
 
   // Check cache first
   if (claimsCache.has(cacheKey)) {
@@ -759,10 +795,21 @@ export async function getClaimsForVideo(videoId, options = {}) {
 
   let claims = [];
 
-  if (Object.prototype.hasOwnProperty.call(SEEDED_CLAIMS, cleanId)) {
-    claims = SEEDED_CLAIMS[cleanId].map((c) => validateClaim(c));
+  if (isProd) {
+    try {
+      claims = await fetchClaimsFromBackend(cleanId, options.apiEndpoint);
+    } catch (err) {
+      // In PROD mode when backend placeholder is unreachable, produce a clear status warning or fallback
+      console.warn(`[YouTube Misinfo Detector] PROD mode active for video ${cleanId}, backend ${options.apiEndpoint || 'exampleapi.com'} is a placeholder.`);
+      claims = [];
+    }
   } else {
-    claims = generateDeterministicClaims(cleanId, options);
+    // TEST mode: use seeded datasets and deterministic mock generator
+    if (Object.prototype.hasOwnProperty.call(SEEDED_CLAIMS, cleanId)) {
+      claims = SEEDED_CLAIMS[cleanId].map((c) => validateClaim(c));
+    } else {
+      claims = generateDeterministicClaims(cleanId, options);
+    }
   }
 
   // Cache results

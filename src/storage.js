@@ -11,7 +11,9 @@ export const STORAGE_KEYS = Object.freeze({
 export const DEFAULT_SETTINGS = Object.freeze({
   enabled: true,
   showOverlays: true,
-  filterVerdict: 'all' // 'all' | 'misinformation' | 'verified' | 'unknown'
+  filterVerdict: 'all', // 'all' | 'misinformation' | 'verified' | 'unknown'
+  mode: 'test',         // 'test' (mock data) | 'prod' (real API backend)
+  apiEndpoint: 'https://exampleapi.com/api/claims'
 });
 
 /**

@@ -168,7 +168,11 @@ async function startVideoSession(videoId) {
   const isChinese = typeof document !== 'undefined' && /[\u4e00-\u9fa5]/.test(document.title || '');
 
   try {
-    currentClaims = await getClaimsForVideo(videoId, { isChinese });
+    currentClaims = await getClaimsForVideo(videoId, {
+      isChinese,
+      mode: currentSettings.mode || 'test',
+      apiEndpoint: currentSettings.apiEndpoint || 'https://exampleapi.com/api/claims'
+    });
   } catch (err) {
     console.error('[YouTube Misinformation Detector] Failed to load claims:', err);
     currentClaims = [];
@@ -246,9 +250,12 @@ function mountStatusIndicator(videoId, count) {
     document.body.appendChild(indicator);
   }
 
+  const modeTag = currentSettings.mode === 'prod' ? 'PROD' : 'TEST';
+  const badgeColor = currentSettings.mode === 'prod' ? '#52c41a' : '#ff4d4f';
+
   indicator.innerHTML = `
-    <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ff4d4f;box-shadow:0 0 8px #ff4d4f;animation:ytPulse 1.5s infinite;"></span>
-    <span>🛡️ Misinfo Detector Active (${count} claims)</span>
+    <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${badgeColor};box-shadow:0 0 8px ${badgeColor};animation:ytPulse 1.5s infinite;"></span>
+    <span>🛡️ Misinfo Detector Active [${modeTag}] (${count} claims)</span>
   `;
 }
 

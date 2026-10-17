@@ -37,13 +37,13 @@
 
       <div class="toggle-row">
         <div class="toggle-info">
-          <span class="toggle-label">In-Video Overlays</span>
-          <span class="toggle-desc">Show warning cards during playback</span>
+          <span class="toggle-label">Data Mode</span>
+          <span class="toggle-desc">TEST (Mock Data) vs PROD (Backend API)</span>
         </div>
-        <label class="switch">
-          <input type="checkbox" id="toggle-overlays" checked>
-          <span class="slider"></span>
-        </label>
+        <select id="select-mode" style="background: #2a2a2a; color: #fff; border: 1px solid #444; border-radius: 6px; padding: 4px 8px; font-size: 12px; font-weight: 500;">
+          <option value="test">TEST (Mock Data)</option>
+          <option value="prod">PROD (exampleapi.com)</option>
+        </select>
       </div>
     </section>
 
