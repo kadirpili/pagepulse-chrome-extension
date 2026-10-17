@@ -26,7 +26,8 @@ let checkObserver = null;
 async function init() {
   currentSettings = await getSettings();
 
-  onSettingsChanged((newSettings) => {
+  onSettingsChanged(async (newSettings) => {
+    const prevMode = currentSettings.mode;
     currentSettings = newSettings;
     if (overlayManager) {
       overlayManager.update(null, currentSettings);
@@ -38,6 +39,9 @@ async function init() {
       if (currentSettings.filterVerdict) {
         drawerManager.setFilter(currentSettings.filterVerdict);
       }
+    }
+    if (prevMode !== newSettings.mode && activeVideoId) {
+      await reloadClaimsForActiveVideo();
     }
   });
 
@@ -91,6 +95,8 @@ function computeVideoStats() {
   };
 }
 
+let sessionStartingForVideoId = null;
+
 /**
  * Handles YouTube navigation events and SPA client-side routing.
  */
@@ -109,7 +115,8 @@ async function handleNavigation() {
     return;
   }
 
-  if (videoId === activeVideoId && activeSessionValid()) {
+  // Prevent redundant session triggers if session is already active or in-flight for this video ID
+  if (videoId === activeVideoId && (activeSessionValid() || sessionStartingForVideoId === videoId)) {
     return;
   }
 
@@ -154,6 +161,33 @@ function teardownSession() {
   activeVideoId = null;
   currentClaims = [];
   isSeeking = false;
+  sessionStartingForVideoId = null;
+}
+
+/**
+ * Reloads claims for the active video when settings (such as TEST/PROD mode) change.
+ */
+async function reloadClaimsForActiveVideo() {
+  if (!activeVideoId) return;
+  const isChinese = typeof document !== 'undefined' && /[\u4e00-\u9fa5]/.test(document.title || '');
+  mountStatusIndicator(activeVideoId, 'loading');
+
+  try {
+    currentClaims = await getClaimsForVideo(activeVideoId, {
+      isChinese,
+      mode: currentSettings.mode || 'prod',
+      apiEndpoint: currentSettings.apiEndpoint,
+      authToken: currentSettings.apiKey
+    });
+  } catch (err) {
+    console.error('[YouTube Misinformation Detector] Failed to reload claims:', err);
+    currentClaims = [];
+  }
+
+  if (drawerManager) {
+    drawerManager.setClaims(currentClaims);
+  }
+  mountStatusIndicator(activeVideoId, currentClaims.length);
 }
 
 /**
@@ -161,8 +195,13 @@ function teardownSession() {
  * @param {string} videoId
  */
 async function startVideoSession(videoId) {
+  sessionStartingForVideoId = videoId;
   teardownSession();
   activeVideoId = videoId;
+
+  // Mount persistent status indicator immediately to show status/loading
+  const isProd = currentSettings.mode === 'prod';
+  mountStatusIndicator(videoId, isProd ? 'loading' : '...');
 
   // Detect if active video is in Chinese from page title or DOM text
   const isChinese = typeof document !== 'undefined' && /[\u4e00-\u9fa5]/.test(document.title || '');
@@ -170,13 +209,17 @@ async function startVideoSession(videoId) {
   try {
     currentClaims = await getClaimsForVideo(videoId, {
       isChinese,
-      mode: currentSettings.mode || 'test',
-      apiEndpoint: currentSettings.apiEndpoint || 'https://exampleapi.com/api/claims'
+      mode: currentSettings.mode || 'prod',
+      apiEndpoint: currentSettings.apiEndpoint,
+      authToken: currentSettings.apiKey
     });
   } catch (err) {
     console.error('[YouTube Misinformation Detector] Failed to load claims:', err);
     currentClaims = [];
   }
+
+  // Abort if user navigated away while fetching claims
+  if (activeVideoId !== videoId) return;
 
   const videoElement = await waitForVideoElement(5000);
   if (!videoElement || activeVideoId !== videoId) return;
@@ -207,8 +250,9 @@ async function startVideoSession(videoId) {
     }
   });
 
-  // Mount persistent status indicator on page
+  // Mount persistent status indicator on page with final claims count
   mountStatusIndicator(videoId, currentClaims.length);
+  sessionStartingForVideoId = null;
 
   // Attach video playback listeners
   activeVideoElement.addEventListener('timeupdate', onTimeUpdate);
@@ -218,8 +262,10 @@ async function startVideoSession(videoId) {
 
 /**
  * Mounts a floating indicator on YouTube to show the detector is running and processing.
+ * @param {string} videoId
+ * @param {number|string} countOrStatus
  */
-function mountStatusIndicator(videoId, count) {
+function mountStatusIndicator(videoId, countOrStatus) {
   let indicator = document.getElementById('yt-misinfo-status-badge');
   if (!indicator) {
     indicator = document.createElement('div');
@@ -250,12 +296,20 @@ function mountStatusIndicator(videoId, count) {
     document.body.appendChild(indicator);
   }
 
-  const modeTag = currentSettings.mode === 'prod' ? 'PROD' : 'TEST';
-  const badgeColor = currentSettings.mode === 'prod' ? '#52c41a' : '#ff4d4f';
+  const isProd = currentSettings.mode === 'prod';
+  const modeTag = isProd ? 'PROD' : 'TEST';
+  const badgeColor = isProd ? '#52c41a' : '#ff4d4f';
+  indicator.style.borderColor = badgeColor;
+
+  const countDisplay = countOrStatus === 'loading'
+    ? 'Loading...'
+    : typeof countOrStatus === 'number'
+      ? `${countOrStatus} claims`
+      : `${countOrStatus || 0} claims`;
 
   indicator.innerHTML = `
     <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${badgeColor};box-shadow:0 0 8px ${badgeColor};animation:ytPulse 1.5s infinite;"></span>
-    <span>🛡️ Misinfo Detector Active [${modeTag}] (${count} claims)</span>
+    <span>🛡️ Misinfo Detector Active [${modeTag}] (${countDisplay})</span>
   `;
 }
 

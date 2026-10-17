@@ -391,7 +391,7 @@ test('dom-components: Interactive Timeline Drawer Component', async (t) => {
     // Card 3: unknown
     const badge3 = cards[2].querySelector('.badge-unknown');
     assert.ok(badge3, 'Card 3 must have badge-unknown');
-    assert.ok(badge3.textContent.toLowerCase().includes('unknown'));
+    assert.ok(badge3.textContent.toLowerCase().includes('unverified'));
   });
 
   await t.test('formats timestamps chronologically as MM:SS', () => {

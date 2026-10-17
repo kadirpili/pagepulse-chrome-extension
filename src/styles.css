@@ -76,6 +76,12 @@
   }
 }
 
+@keyframes ytPulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
 .yt-misinfo-card-header {
   display: flex !important;
   justify-content: space-between !important;

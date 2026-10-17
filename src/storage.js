@@ -12,8 +12,9 @@ export const DEFAULT_SETTINGS = Object.freeze({
   enabled: true,
   showOverlays: true,
   filterVerdict: 'all', // 'all' | 'misinformation' | 'verified' | 'unknown'
-  mode: 'test',         // 'test' (mock data) | 'prod' (real API backend)
-  apiEndpoint: 'https://exampleapi.com/api/claims'
+  mode: 'test',         // 'test' (mock/seeded data) | 'prod' (real API backend)
+  apiEndpoint: 'https://d3tuhog92nak7r.cloudfront.net/factcheck',
+  apiKey: '91b24cc09314aca901d8153cdacd741a730345f394ed61aa20b02ae92ea9b9fb'
 });
 
 /**
@@ -91,6 +92,18 @@ export async function saveSettings(partial) {
     if (valid.includes(partial.filterVerdict)) {
       updated.filterVerdict = partial.filterVerdict;
     }
+  }
+  if (typeof partial.mode === 'string') {
+    const validModes = ['test', 'prod'];
+    if (validModes.includes(partial.mode)) {
+      updated.mode = partial.mode;
+    }
+  }
+  if (typeof partial.apiEndpoint === 'string' && partial.apiEndpoint.trim().length > 0) {
+    updated.apiEndpoint = partial.apiEndpoint.trim();
+  }
+  if (typeof partial.apiKey === 'string') {
+    updated.apiKey = partial.apiKey.trim();
   }
 
   if (hasChromeStorage()) {

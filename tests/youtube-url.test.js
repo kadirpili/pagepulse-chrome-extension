@@ -114,5 +114,7 @@ test('youtube-url: formatTimestamp', async (t) => {
     assert.equal(formatTimestamp(NaN), '00:00');
     assert.equal(formatTimestamp(null), '00:00');
     assert.equal(formatTimestamp(undefined), '00:00');
+    assert.equal(formatTimestamp(Infinity), '00:00');
+    assert.equal(formatTimestamp(-Infinity), '00:00');
   });
 });

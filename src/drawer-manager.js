@@ -83,6 +83,14 @@ export function createDrawer(claims = [], options = {}) {
   cardsList.className = 'yt-misinfo-cards-list';
   cardsList.setAttribute('role', 'list');
 
+  if (sorted.length === 0) {
+    const emptyState = document.createElement('div');
+    emptyState.className = 'yt-misinfo-empty-state';
+    emptyState.style.cssText = 'padding: 36px 16px; text-align: center; color: #888; font-size: 13px; line-height: 1.6;';
+    emptyState.innerHTML = '<div style="font-size: 28px; margin-bottom: 8px;">🛡️</div><div>No claims recorded for this video.</div><div style="font-size: 11px; color: #666; margin-top: 4px;">Fact-check data will appear here when available.</div>';
+    cardsList.appendChild(emptyState);
+  }
+
   sorted.forEach((claim) => {
     const card = document.createElement('article');
     card.className = `yt-misinfo-timeline-card yt-misinfo-card yt-misinfo-timeline-card--${claim.verdict}`;
@@ -108,10 +116,18 @@ export function createDrawer(claims = [], options = {}) {
         ? 'Misinformation'
         : claim.verdict === 'verified'
           ? 'Verified'
-          : 'Unknown';
+          : 'Unverified';
 
     topRow.appendChild(tsPill);
     topRow.appendChild(badge);
+
+    if (typeof claim.score === 'number') {
+      const scorePill = document.createElement('span');
+      scorePill.className = `yt-misinfo-score-pill yt-misinfo-score-pill--${claim.score}`;
+      scorePill.style.cssText = 'font-size: 11px; padding: 2px 7px; border-radius: 4px; background: rgba(255,255,255,0.08); color: #bbb; margin-left: auto; font-weight: 500; font-family: monospace;';
+      scorePill.textContent = `Score: ${claim.score}/3`;
+      topRow.appendChild(scorePill);
+    }
 
     // Quote & Explanation (Sanitized via textContent)
     const quote = document.createElement('p');

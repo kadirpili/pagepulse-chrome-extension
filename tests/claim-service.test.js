@@ -4,7 +4,13 @@ import {
   validateClaim,
   generateDeterministicClaims,
   getClaimsForVideo,
-  VALID_VERDICTS
+  VALID_VERDICTS,
+  normalizeBackendClaim,
+  parseApiResponse,
+  fetchClaimsFromBackend,
+  clearClaimsCache,
+  DEFAULT_PROD_ENDPOINT,
+  DEFAULT_AUTH_BEARER
 } from '../src/claim-service.js';
 
 test('claim-service: validateClaim', async (t) => {
@@ -177,3 +183,322 @@ test('claim-service: Deterministic Fallback Generator', async (t) => {
     assert.ok(Array.isArray(nullResult));
   });
 });
+
+test('claim-service: normalizeBackendClaim', async (t) => {
+  await t.test('normalizes candidate with string timestamp, loose verdict casing, and single source string', () => {
+    const raw = {
+      timestamp: '35.4',
+      sentence: 'The Moon has a liquid helium core.',
+      verdict: 'FALSE',
+      explanation: 'Seismic and laser ranging measurements indicate a solid iron inner core and fluid outer core.',
+      source: 'https://nasa.gov/moon-core'
+    };
+
+    const normalized = normalizeBackendClaim(raw);
+    assert.ok(normalized);
+    assert.equal(normalized.timestamp, 35.4);
+    assert.equal(normalized.sentence, 'The Moon has a liquid helium core.');
+    assert.equal(normalized.verdict, 'misinformation');
+    assert.deepEqual(normalized.sources, ['https://nasa.gov/moon-core']);
+    assert.equal(normalized.duration, 4.5);
+  });
+
+  await t.test('maps verdict synonyms correctly: true/verified -> verified, fake/misleading -> misinformation', () => {
+    const trueClaim = normalizeBackendClaim({
+      timestamp: 10,
+      sentence: 'Statement A',
+      verdict: 'TRUE'
+    });
+    assert.equal(trueClaim.verdict, 'verified');
+
+    const verifiedClaim = normalizeBackendClaim({
+      timestamp: 10,
+      sentence: 'Statement B',
+      verdict: 'accurate'
+    });
+    assert.equal(verifiedClaim.verdict, 'verified');
+
+    const fakeClaim = normalizeBackendClaim({
+      timestamp: 10,
+      sentence: 'Statement C',
+      verdict: 'debunked'
+    });
+    assert.equal(fakeClaim.verdict, 'misinformation');
+
+    const unknownClaim = normalizeBackendClaim({
+      timestamp: 10,
+      sentence: 'Statement D',
+      verdict: 'unconfirmed'
+    });
+    assert.equal(unknownClaim.verdict, 'unknown');
+  });
+
+  await t.test('maps numeric score 0-3 correctly to verdicts and generates descriptive explanations', () => {
+    const claim3 = normalizeBackendClaim({
+      timestamp: 7.88,
+      sentence: 'For 30 years I taught at MIT...',
+      score: 3,
+      sources: ['https://science.feedback.org/review/...']
+    });
+    assert.equal(claim3.verdict, 'misinformation');
+    assert.equal(claim3.score, 3);
+    assert.match(claim3.explanation, /Score: 3\/3/i);
+
+    const claim2 = normalizeBackendClaim({
+      timestamp: 174.53,
+      sentence: 'The IPCC acknowledged...',
+      score: 2,
+      sources: ['https://climatefeedback.org/...']
+    });
+    assert.equal(claim2.verdict, 'misinformation');
+    assert.equal(claim2.score, 2);
+    assert.match(claim2.explanation, /Score: 2\/3/i);
+
+    const claim1 = normalizeBackendClaim({
+      timestamp: 187.16,
+      sentence: 'Most importantly...',
+      score: 1,
+      sources: []
+    });
+    assert.equal(claim1.verdict, 'unknown');
+    assert.equal(claim1.score, 1);
+    assert.match(claim1.explanation, /Score: 1\/3/i);
+
+    const claim0 = normalizeBackendClaim({
+      timestamp: 134.89,
+      sentence: 'Atmospheric levels of CO2...',
+      score: 0,
+      sources: ['https://skepticalscience.com/...']
+    });
+    assert.equal(claim0.verdict, 'verified');
+    assert.equal(claim0.score, 0);
+    assert.match(claim0.explanation, /Score: 0\/3/i);
+  });
+
+  await t.test('returns null for non-salvageable claim candidates', () => {
+    assert.equal(normalizeBackendClaim(null), null);
+    assert.equal(normalizeBackendClaim({}), null);
+    assert.equal(normalizeBackendClaim({ timestamp: -10, sentence: 'Valid sentence' }), null);
+    assert.equal(normalizeBackendClaim({ timestamp: 10, sentence: '' }), null);
+    assert.equal(normalizeBackendClaim({ timestamp: NaN, sentence: 'Valid sentence' }), null);
+  });
+});
+
+test('claim-service: parseApiResponse', async (t) => {
+  await t.test('parses direct array payload and sorts chronologically', () => {
+    const apiPayload = [
+      { timestamp: 50.0, sentence: 'Second claim', verdict: 'verified' },
+      { timestamp: 12.0, sentence: 'First claim', verdict: 'misinformation' }
+    ];
+
+    const parsed = parseApiResponse(apiPayload);
+    assert.equal(parsed.length, 2);
+    assert.equal(parsed[0].timestamp, 12.0);
+    assert.equal(parsed[1].timestamp, 50.0);
+  });
+
+  await t.test('parses nested envelope { data: { claims: [...] } } and ignores corrupted items', () => {
+    const apiPayload = {
+      status: 'success',
+      data: {
+        claims: [
+          { timestamp: 20.0, sentence: 'Valid claim 1', verdict: 'verified' },
+          { timestamp: -99, sentence: 'Corrupt claim' },
+          { timestamp: 40.0, sentence: 'Valid claim 2', verdict: 'misinformation' }
+        ]
+      }
+    };
+
+    const parsed = parseApiResponse(apiPayload);
+    assert.equal(parsed.length, 2);
+    assert.equal(parsed[0].sentence, 'Valid claim 1');
+    assert.equal(parsed[1].sentence, 'Valid claim 2');
+  });
+
+  await t.test('handles empty or null payload gracefully', () => {
+    assert.deepEqual(parseApiResponse(null), []);
+    assert.deepEqual(parseApiResponse({}), []);
+    assert.deepEqual(parseApiResponse([]), []);
+  });
+});
+
+test('claim-service: fetchClaimsFromBackend with retries & error handling', async (t) => {
+  await t.test('successfully fetches claims on HTTP 200', async () => {
+    const mockFetch = async () => ({
+      ok: true,
+      status: 200,
+      json: async () => [
+        { timestamp: 15.0, sentence: 'Backend factcheck statement', verdict: 'verified' }
+      ]
+    });
+
+    const claims = await fetchClaimsFromBackend('testVideo123', 'https://exampleapi.com/api/claims', {
+      fetchFn: mockFetch
+    });
+
+    assert.equal(claims.length, 1);
+    assert.equal(claims[0].sentence, 'Backend factcheck statement');
+    assert.equal(claims[0].verdict, 'verified');
+  });
+
+  await t.test('retries on HTTP 500 server error and succeeds on subsequent retry', async () => {
+    let callCount = 0;
+    const mockFetch = async () => {
+      callCount++;
+      if (callCount === 1) {
+        return { ok: false, status: 500, statusText: 'Internal Server Error' };
+      }
+      return {
+        ok: true,
+        status: 200,
+        json: async () => [
+          { timestamp: 25.0, sentence: 'Recovered after retry', verdict: 'misinformation' }
+        ]
+      };
+    };
+
+    const claims = await fetchClaimsFromBackend('testRetryVideo', 'https://exampleapi.com/api/claims', {
+      fetchFn: mockFetch,
+      maxRetries: 2,
+      initialDelayMs: 20
+    });
+
+    assert.equal(callCount, 2, 'Should have retried once after 500 error');
+    assert.equal(claims.length, 1);
+    assert.equal(claims[0].sentence, 'Recovered after retry');
+  });
+
+  await t.test('fast-fails on HTTP 404 client error without wasting retries', async () => {
+    let callCount = 0;
+    const mockFetch = async () => {
+      callCount++;
+      return { ok: false, status: 404, statusText: 'Not Found' };
+    };
+
+    const claims = await fetchClaimsFromBackend('missingVideo', 'https://exampleapi.com/api/claims', {
+      fetchFn: mockFetch,
+      maxRetries: 3,
+      initialDelayMs: 20
+    });
+
+    assert.equal(callCount, 1, 'Should exit immediately on 404 without retrying');
+    assert.deepEqual(claims, []);
+  });
+
+  await t.test('sends POST request with JSON body {"videoId": "..."} and Bearer authorization header', async () => {
+    let capturedUrl = '';
+    let capturedOptions = null;
+
+    const mockFetch = async (url, options) => {
+      capturedUrl = url;
+      capturedOptions = options;
+      return {
+        ok: true,
+        status: 200,
+        json: async () => [
+          { timestamp: 42.5, sentence: 'Real API statement', score: 3, sources: ['https://factcheck.org'] }
+        ]
+      };
+    };
+
+    const claims = await fetchClaimsFromBackend('OwqIy8Ikv-c', DEFAULT_PROD_ENDPOINT, {
+      fetchFn: mockFetch
+    });
+
+    assert.equal(capturedUrl, DEFAULT_PROD_ENDPOINT);
+    assert.equal(capturedOptions.method, 'POST');
+    assert.equal(capturedOptions.headers['Content-Type'], 'application/json');
+    assert.match(capturedOptions.headers['Authorization'], /Bearer 91b24cc09314aca901d8153cdacd741a730345f394ed61aa20b02ae92ea9b9fb/);
+    assert.deepEqual(JSON.parse(capturedOptions.body), { videoId: 'OwqIy8Ikv-c' });
+    assert.equal(claims.length, 1);
+    assert.equal(claims[0].score, 3);
+    assert.equal(claims[0].verdict, 'misinformation');
+  });
+
+  await t.test('live API integration: fetches real factcheck data for OwqIy8Ikv-c from Cloudfront', async () => {
+    const claims = await fetchClaimsFromBackend('OwqIy8Ikv-c');
+    assert.ok(Array.isArray(claims));
+    assert.ok(claims.length >= 3, 'Real API should return factchecked claims');
+    assert.equal(claims[0].timestamp, 7.88);
+    assert.equal(claims[0].score, 3);
+    assert.equal(claims[0].verdict, 'misinformation');
+  });
+});
+
+test('claim-service: Strictly Once API Calling & In-Flight Deduplication', async (t) => {
+  clearClaimsCache();
+
+  await t.test('guarantees single network call for concurrent requests on the same video ID', async () => {
+    clearClaimsCache();
+    let networkFetchCount = 0;
+
+    const mockFetch = async () => {
+      networkFetchCount++;
+      // Simulate 50ms network latency
+      await new Promise((r) => setTimeout(r, 50));
+      return {
+        ok: true,
+        status: 200,
+        json: async () => [
+          { timestamp: 10.0, sentence: 'Singleton concurrent claim', verdict: 'verified' }
+        ]
+      };
+    };
+
+    const options = {
+      mode: 'prod',
+      apiEndpoint: 'https://testapi.com/claims',
+      fetchFn: mockFetch
+    };
+
+    // Dispatch 5 concurrent calls simultaneously
+    const [res1, res2, res3, res4, res5] = await Promise.all([
+      getClaimsForVideo('concurrentVideoId', options),
+      getClaimsForVideo('concurrentVideoId', options),
+      getClaimsForVideo('concurrentVideoId', options),
+      getClaimsForVideo('concurrentVideoId', options),
+      getClaimsForVideo('concurrentVideoId', options)
+    ]);
+
+    assert.equal(networkFetchCount, 1, 'Network API must be invoked STRICTLY ONCE across concurrent calls');
+    assert.equal(res1.length, 1);
+    assert.deepEqual(res1, res2);
+    assert.deepEqual(res2, res3);
+    assert.deepEqual(res3, res4);
+    assert.deepEqual(res4, res5);
+  });
+
+  await t.test('subsequent calls for the same video ID use memory cache with 0 network calls', async () => {
+    let networkFetchCount = 0;
+    const mockFetch = async () => {
+      networkFetchCount++;
+      return {
+        ok: true,
+        status: 200,
+        json: async () => [
+          { timestamp: 10.0, sentence: 'Cached claim', verdict: 'verified' }
+        ]
+      };
+    };
+
+    const options = {
+      mode: 'prod',
+      apiEndpoint: 'https://testapi.com/claims',
+      fetchFn: mockFetch
+    };
+
+    // First call sets cache
+    const initial = await getClaimsForVideo('cachedVideoId', options);
+    assert.equal(networkFetchCount, 1, 'Initial call triggers exactly 1 network call');
+    assert.equal(initial.length, 1);
+
+    // Call 10 more times
+    for (let i = 0; i < 10; i++) {
+      const subsequent = await getClaimsForVideo('cachedVideoId', options);
+      assert.deepEqual(subsequent, initial);
+    }
+
+    assert.equal(networkFetchCount, 1, 'Network call count remains 1; subsequent 10 calls served purely from cache');
+  });
+});
+

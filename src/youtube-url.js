@@ -143,7 +143,7 @@ export function isYouTubeWatchUrl(urlOrStr) {
  * @returns {string} Formatted timestamp string.
  */
 export function formatTimestamp(seconds) {
-  if (typeof seconds !== 'number' || isNaN(seconds) || seconds < 0) {
+  if (typeof seconds !== 'number' || isNaN(seconds) || !Number.isFinite(seconds) || seconds < 0) {
     return '00:00';
   }
 

@@ -177,7 +177,8 @@ test('YouTube Misinformation Detector - Real Google Chrome E2E Suite', async (t)
     // Mock YouTube request to provide simulated watch page DOM
     await page.setRequestInterception(true);
     page.on('request', (req) => {
-      if (req.url().includes('youtube.com/watch')) {
+      const reqUrl = req.url();
+      if (reqUrl.includes('youtube.com/watch')) {
         req.respond({
           status: 200,
           contentType: 'text/html',
@@ -194,6 +195,46 @@ test('YouTube Misinformation Detector - Real Google Chrome E2E Suite', async (t)
 </body>
 </html>`
         });
+      } else if (reqUrl.includes('cloudfront.net/factcheck')) {
+        req.respond({
+          status: 200,
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': '*',
+            'Access-Control-Allow-Methods': '*'
+          },
+          contentType: 'application/json',
+          body: JSON.stringify([
+            {
+              timestamp: 12.0,
+              sentence: 'This song was completely improvised in a single take without prior rehearsal.',
+              score: 3,
+              explanation: 'The track was meticulously written, arranged, and produced by Stock Aitken Waterman over several weeks at PWL Studios in London.',
+              sources: ['https://factcheck.org/1']
+            },
+            {
+              timestamp: 42.5,
+              sentence: 'Never Gonna Give You Up reached number one in 25 countries upon its release in 1987.',
+              score: 0,
+              explanation: 'Official international music record charts confirm the single topped charts in 25 countries worldwide.',
+              sources: ['https://billboard.com']
+            },
+            {
+              timestamp: 88.0,
+              sentence: 'The music video was shot on a multi-million dollar film soundstage in Hollywood.',
+              score: 3,
+              explanation: 'The video was directed by Simon West on a shoestring budget near London Battersea District.',
+              sources: ['https://apnews.com']
+            },
+            {
+              timestamp: 135.0,
+              sentence: 'Rick Astley originally declined to record the vocal track until persuaded by Pete Waterman.',
+              score: 1,
+              explanation: 'Historical accounts differ on Astleys initial reaction.',
+              sources: ['https://reuters.com']
+            }
+          ])
+        });
       } else {
         req.respond({ status: 204, body: '' });
       }
@@ -208,12 +249,19 @@ test('YouTube Misinformation Detector - Real Google Chrome E2E Suite', async (t)
     await page.addStyleTag({ path: stylesPath });
     await page.addScriptTag({ path: bundlePath });
 
-    // Wait for content script to mount UI components
+    // Wait for content script to mount UI components and load claims
     await page.waitForSelector('#yt-misinfo-status-badge', { timeout: 4000 });
+    await page.waitForFunction(
+      () => {
+        const badge = document.getElementById('yt-misinfo-status-badge');
+        return badge && !badge.textContent.includes('Loading') && badge.textContent.includes('claims');
+      },
+      { timeout: 4000 }
+    );
 
     // 3. Verify persistent visual indicator badge renders and pulses at bottom-left
     const badgeText = await page.$eval('#yt-misinfo-status-badge', (el) => el.textContent.trim());
-    assert.equal(badgeText, '🛡️ Misinfo Detector Active (4 claims)', 'Indicator badge displays active status and 4 claims');
+    assert.match(badgeText, /🛡️ Misinfo Detector Active.*\(4 claims\)/, 'Indicator badge displays active status and 4 claims');
 
     const badgeStyle = await page.$eval('#yt-misinfo-status-badge', (el) => ({
       position: el.style.position,

@@ -722,57 +722,311 @@ export function generateDeterministicClaims(videoId, options = {}) {
   return claims;
 }
 
+export const DEFAULT_PROD_ENDPOINT = 'https://d3tuhog92nak7r.cloudfront.net/factcheck';
+export const DEFAULT_AUTH_BEARER = '91b24cc09314aca901d8153cdacd741a730345f394ed61aa20b02ae92ea9b9fb';
+
 // In-memory cache for retrieved claims
 const claimsCache = new Map();
+// In-flight active network/fetch promises for deduplication
+const inFlightRequests = new Map();
 
 /**
- * Resets the in-memory claims cache (useful for testing).
+ * Resets the in-memory claims cache and active in-flight requests (useful for testing).
  */
 export function clearClaimsCache() {
   claimsCache.clear();
+  inFlightRequests.clear();
 }
 
 /**
- * Fetches real claim data from the production API backend.
- * Uses placeholder exampleapi.com with timeout and graceful error reporting.
- *
- * @param {string} videoId
- * @param {string} [endpoint]
- * @returns {Promise<Array<Object>>}
+ * Returns the number of currently active in-flight requests (useful for test assertions).
+ * @returns {number}
  */
-export async function fetchClaimsFromBackend(videoId, endpoint = 'https://exampleapi.com/api/claims') {
-  const url = `${endpoint}?videoId=${encodeURIComponent(videoId)}`;
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 6000);
+export function getInFlightRequestCount() {
+  return inFlightRequests.size;
+}
+
+/**
+ * Normalizes and validates a single claim item received from the backend API.
+ * Supports the output schema:
+ *   [
+ *     {
+ *       "timestamp": 42.5,
+ *       "sentence": "Sample excerpt from video speech or transcript",
+ *       "score": 0-3,
+ *       "sources": ["https://factcheck.org/..."]
+ *     }
+ *   ]
+ *
+ * @param {unknown} raw - Candidate claim object from API response.
+ * @returns {Object|null} Validated Claim object, or null if invalid.
+ */
+export function normalizeBackendClaim(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    return null;
+  }
+
+  // 1. Timestamp: handle float, int, or numeric string
+  let timestamp = raw.timestamp;
+  if (typeof timestamp === 'string') {
+    timestamp = parseFloat(timestamp);
+  }
+  if (typeof timestamp !== 'number' || isNaN(timestamp) || !isFinite(timestamp) || timestamp < 0) {
+    return null;
+  }
+
+  // 2. Sentence: extract and trim
+  const rawSentence = raw.sentence || raw.claim || raw.text;
+  if (typeof rawSentence !== 'string' || rawSentence.trim().length === 0) {
+    return null;
+  }
+  const sentence = rawSentence.trim();
+
+  // 3. Verdict & Score (0-3 scale):
+  // 3: Severe Misinformation
+  // 2: Misleading / Questionable
+  // 1: Unverified / Context needed
+  // 0: Verified / Accurate
+  let verdict = 'unknown';
+  let score = typeof raw.score === 'number' && !isNaN(raw.score) ? raw.score : undefined;
+
+  const rawVerdict = String(raw.verdict || raw.status || '').toLowerCase().trim();
+  if (
+    rawVerdict === 'misinformation' ||
+    rawVerdict === 'false' ||
+    rawVerdict === 'misleading' ||
+    rawVerdict === 'fake' ||
+    rawVerdict === 'debunked'
+  ) {
+    verdict = 'misinformation';
+    if (score === undefined) score = 3;
+  } else if (
+    rawVerdict === 'verified' ||
+    rawVerdict === 'true' ||
+    rawVerdict === 'accurate' ||
+    rawVerdict === 'correct'
+  ) {
+    verdict = 'verified';
+    if (score === undefined) score = 0;
+  } else if (typeof raw.score === 'number') {
+    if (raw.score >= 2) {
+      verdict = 'misinformation';
+    } else if (raw.score === 0) {
+      verdict = 'verified';
+    } else {
+      verdict = 'unknown';
+    }
+  }
+
+  // 4. Explanation: generate informative context from score if not provided
+  let explanation = '';
+  if (typeof raw.explanation === 'string' && raw.explanation.trim()) {
+    explanation = raw.explanation.trim();
+  } else if (typeof raw.reason === 'string' && raw.reason.trim()) {
+    explanation = raw.reason.trim();
+  } else if (score === 3) {
+    explanation = 'Flagged as severe misinformation (Severity score: 3/3). Contradicted by authoritative scientific and fact-checking sources.';
+  } else if (score === 2) {
+    explanation = 'Flagged as misleading or disputed (Severity score: 2/3). Evidence contradicts key elements of this assertion.';
+  } else if (score === 1) {
+    explanation = 'Unverified statement (Severity score: 1/3). Requires additional context or evidence to corroborate.';
+  } else if (score === 0) {
+    explanation = 'Verified statement (Severity score: 0/3). Confirmed accurate by verified reference sources.';
+  } else {
+    explanation = 'Analyzed by automated fact-checking engine.';
+  }
+
+  // 5. Sources: array of valid URL strings
+  let sources = [];
+  if (Array.isArray(raw.sources)) {
+    sources = raw.sources.filter((s) => typeof s === 'string' && /^https?:\/\//i.test(s.trim()));
+  } else if (typeof raw.sources === 'string' && /^https?:\/\//i.test(raw.sources.trim())) {
+    sources = [raw.sources.trim()];
+  } else if (typeof raw.source === 'string' && /^https?:\/\//i.test(raw.source.trim())) {
+    sources = [raw.source.trim()];
+  }
+
+  // 6. Duration
+  let duration = 4.5;
+  if (
+    typeof raw.duration === 'number' &&
+    !isNaN(raw.duration) &&
+    isFinite(raw.duration) &&
+    raw.duration > 0
+  ) {
+    duration = raw.duration;
+  }
 
   try {
-    const res = await fetch(url, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' },
-      signal: controller.signal
+    const claim = validateClaim({
+      timestamp: Math.round(timestamp * 100) / 100,
+      sentence,
+      verdict,
+      explanation,
+      sources,
+      duration
     });
-    clearTimeout(timeoutId);
+    if (score !== undefined) {
+      claim.score = score;
+    }
+    return claim;
+  } catch {
+    return null;
+  }
+}
 
-    if (!res.ok) {
-      throw new Error(`Production API returned status ${res.status}: ${res.statusText}`);
+/**
+ * Parses raw JSON payload from the backend API into a validated, chronologically sorted array of Claims.
+ * Handles both flat arrays and wrapped envelope responses ({ claims: [] }, { data: [] }, etc.).
+ *
+ * @param {unknown} json - The parsed JSON body.
+ * @returns {Array<Object>} Array of validated claims.
+ */
+export function parseApiResponse(json) {
+  if (!json) return [];
+
+  let rawList = [];
+  if (Array.isArray(json)) {
+    rawList = json;
+  } else if (typeof json === 'object') {
+    if (Array.isArray(json.claims)) {
+      rawList = json.claims;
+    } else if (Array.isArray(json.data?.claims)) {
+      rawList = json.data.claims;
+    } else if (Array.isArray(json.data)) {
+      rawList = json.data;
+    } else if (Array.isArray(json.results)) {
+      rawList = json.results;
+    } else if (Array.isArray(json.result)) {
+      rawList = json.result;
+    }
+  }
+
+  const validClaims = [];
+  for (const item of rawList) {
+    const claim = normalizeBackendClaim(item);
+    if (claim) {
+      validClaims.push(claim);
+    }
+  }
+
+  // Chronological sort ascending
+  validClaims.sort((a, b) => a.timestamp - b.timestamp);
+  return validClaims;
+}
+
+/**
+ * Fetches real claim data from the production API backend with:
+ * - POST JSON body {"videoId": "..."}
+ * - Bearer authorization header
+ * - Exponential backoff retry strategy for transient errors / timeouts
+ * - Immediate abort on non-retryable 4xx client errors (e.g. 404, 400)
+ * - Safe JSON parsing and normalization
+ *
+ * @param {string} videoId - YouTube video ID.
+ * @param {string} [endpoint] - Backend API base endpoint URL.
+ * @param {Object} [options] - Options: maxRetries, initialDelayMs, backoffMultiplier, timeoutMs, fetchFn, isChinese, authToken, method.
+ * @returns {Promise<Array<Object>>} Resolves to validated Claims array.
+ */
+export async function fetchClaimsFromBackend(videoId, endpoint = DEFAULT_PROD_ENDPOINT, options = {}) {
+  const maxRetries = typeof options.maxRetries === 'number' ? options.maxRetries : 2;
+  const initialDelayMs = typeof options.initialDelayMs === 'number' ? options.initialDelayMs : 300;
+  const backoffMultiplier = typeof options.backoffMultiplier === 'number' ? options.backoffMultiplier : 2;
+  const timeoutMs = typeof options.timeoutMs === 'number' ? options.timeoutMs : 7000;
+  const fetchFn = options.fetchFn || (typeof fetch !== 'undefined' ? fetch : null);
+
+  if (!fetchFn) {
+    throw new Error('fetch is not available in current environment');
+  }
+
+  const cleanId = String(videoId).trim();
+  const baseEndpoint = endpoint || DEFAULT_PROD_ENDPOINT;
+  const token = options.authToken || DEFAULT_AUTH_BEARER;
+  const method = options.method || 'POST';
+
+  let lastError = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    let controller = null;
+    let timeoutId = null;
+
+    if (typeof AbortController !== 'undefined') {
+      controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), timeoutMs);
     }
 
-    const json = await res.json();
-    const list = Array.isArray(json) ? json : (json?.claims || json?.data || []);
-    return list.map((item) => validateClaim(item));
-  } catch (err) {
-    clearTimeout(timeoutId);
-    console.warn(`[YouTube Misinfo Detector] PROD API request to ${url} failed (${err.message}). Using fallback placeholder.`);
-    throw err;
+    try {
+      const headers = {
+        'Accept': 'application/json',
+        'X-Client': 'YouTube-Misinfo-Detector'
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token.replace(/^Bearer\s+/i, '')}`;
+      }
+
+      let fetchUrl = baseEndpoint;
+      const fetchOptions = {
+        method,
+        headers
+      };
+
+      if (method === 'POST') {
+        headers['Content-Type'] = 'application/json';
+        fetchOptions.body = JSON.stringify({ videoId: cleanId });
+      } else {
+        const u = new URL(baseEndpoint);
+        u.searchParams.set('videoId', cleanId);
+        fetchUrl = u.toString();
+      }
+
+      if (controller) {
+        fetchOptions.signal = controller.signal;
+      }
+
+      const res = await fetchFn(fetchUrl, fetchOptions);
+      if (timeoutId) clearTimeout(timeoutId);
+
+      // Handle HTTP status
+      if (!res.ok) {
+        const status = res.status;
+        // 4xx errors (except 429 Too Many Requests) are non-retryable client errors
+        if (status >= 400 && status < 500 && status !== 429) {
+          console.warn(`[YouTube Misinfo Detector] PROD API HTTP ${status} client error for video ${cleanId}. Non-retryable.`);
+          return [];
+        }
+        throw new Error(`HTTP ${status}: ${res.statusText || 'Error'}`);
+      }
+
+      const json = await res.json();
+      return parseApiResponse(json);
+    } catch (err) {
+      if (timeoutId) clearTimeout(timeoutId);
+      lastError = err;
+
+      const isTimeout = err.name === 'AbortError' || err.message?.toLowerCase().includes('abort');
+      const reason = isTimeout ? `timeout after ${timeoutMs}ms` : err.message;
+      console.warn(`[YouTube Misinfo Detector] PROD API attempt ${attempt + 1}/${maxRetries + 1} failed for ${cleanId} (${reason}).`);
+
+      if (attempt < maxRetries) {
+        const backoffDelay = initialDelayMs * Math.pow(backoffMultiplier, attempt);
+        await new Promise((resolve) => setTimeout(resolve, backoffDelay));
+      }
+    }
   }
+
+  console.warn(
+    `[YouTube Misinfo Detector] PROD API exhausted ${maxRetries + 1} attempts for video ${cleanId}. Error: ${lastError?.message}. Returning empty claims list.`
+  );
+  return [];
 }
 
 /**
  * Asynchronously retrieves claims for a given YouTube video ID.
  * Supports TEST mode (mock/seeded data) and PROD mode (real API backend at exampleapi.com).
+ * Guarantees that the backend API is called strictly once per video ID with in-flight deduplication.
  *
  * @param {string} videoId - The YouTube video ID.
- * @param {Object} [options] - Optional settings (e.g. mode: 'test'|'prod', isChinese, delayMs).
+ * @param {Object} [options] - Optional settings (e.g. mode: 'test'|'prod', apiEndpoint, isChinese, delayMs).
  * @returns {Promise<Array<Object>>} Resolves to an array of validated Claims.
  */
 export async function getClaimsForVideo(videoId, options = {}) {
@@ -782,39 +1036,56 @@ export async function getClaimsForVideo(videoId, options = {}) {
 
   const cleanId = videoId.trim();
   const isProd = options.mode === 'prod';
-  const cacheKey = `${cleanId}:${isProd ? 'prod' : 'test'}:${options.isChinese ? 'zh' : 'en'}`;
+  const endpoint = options.apiEndpoint || DEFAULT_PROD_ENDPOINT;
+  const cacheKey = `${cleanId}:${isProd ? 'prod' : 'test'}:${endpoint}:${options.isChinese ? 'zh' : 'en'}`;
 
-  // Check cache first
+  // 1. Check in-memory cache first (singleton cache per video ID)
   if (claimsCache.has(cacheKey)) {
     return JSON.parse(JSON.stringify(claimsCache.get(cacheKey)));
   }
 
-  if (options.delayMs && options.delayMs > 0) {
-    await new Promise((resolve) => setTimeout(resolve, options.delayMs));
+  // 2. Check in-flight promise deduplication
+  if (inFlightRequests.has(cacheKey)) {
+    const inFlightResult = await inFlightRequests.get(cacheKey);
+    return JSON.parse(JSON.stringify(inFlightResult));
   }
 
-  let claims = [];
-
-  if (isProd) {
-    try {
-      claims = await fetchClaimsFromBackend(cleanId, options.apiEndpoint);
-    } catch (err) {
-      // In PROD mode when backend placeholder is unreachable, produce a clear status warning or fallback
-      console.warn(`[YouTube Misinfo Detector] PROD mode active for video ${cleanId}, backend ${options.apiEndpoint || 'exampleapi.com'} is a placeholder.`);
-      claims = [];
+  // 3. Initiate single request promise
+  const fetchPromise = (async () => {
+    if (options.delayMs && options.delayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, options.delayMs));
     }
-  } else {
-    // TEST mode: use seeded datasets and deterministic mock generator
-    if (Object.prototype.hasOwnProperty.call(SEEDED_CLAIMS, cleanId)) {
-      claims = SEEDED_CLAIMS[cleanId].map((c) => validateClaim(c));
+
+    let claims = [];
+
+    if (isProd) {
+      try {
+        claims = await fetchClaimsFromBackend(cleanId, endpoint, options);
+      } catch (err) {
+        console.warn(`[YouTube Misinfo Detector] PROD API fetch error for ${cleanId}: ${err.message}`);
+        claims = [];
+      }
     } else {
-      claims = generateDeterministicClaims(cleanId, options);
+      // TEST mode: use seeded datasets and deterministic mock generator
+      if (Object.prototype.hasOwnProperty.call(SEEDED_CLAIMS, cleanId)) {
+        claims = SEEDED_CLAIMS[cleanId].map((c) => validateClaim(c));
+      } else {
+        claims = generateDeterministicClaims(cleanId, options);
+      }
     }
+
+    // Cache the resolved result (even if empty, prevents hammering backend)
+    claimsCache.set(cacheKey, claims);
+    return claims;
+  })();
+
+  // Track in-flight request to deduplicate concurrent calls
+  inFlightRequests.set(cacheKey, fetchPromise);
+
+  try {
+    const result = await fetchPromise;
+    return JSON.parse(JSON.stringify(result));
+  } finally {
+    inFlightRequests.delete(cacheKey);
   }
-
-  // Cache results
-  claimsCache.set(cacheKey, claims);
-
-  // Return deep clone
-  return JSON.parse(JSON.stringify(claims));
 }
