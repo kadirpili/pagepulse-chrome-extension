@@ -270,6 +270,70 @@ export const SEEDED_CLAIMS = {
       ],
       duration: 5.0
     }
+  ],
+
+  // 我們真的需要核能嗎？：楊斯棓 at TEDxTaipei 2013
+  '7wFWgopJP5Q': [
+    {
+      timestamp: 45.0,
+      sentence: '「澳洲擁有全世界最豐富的鈾礦儲量，但澳洲國內卻堅持一座核能發電廠都沒有蓋。」',
+      verdict: 'verified',
+      explanation:
+        '世界核能協會（WNA）與澳洲地球科學局數據證實：澳洲擁有全球約三分之一可採鈾礦資源，為主要出口國，但自1998年通過《輻射保護與核安全法》後立法禁止國內核能發電。',
+      sources: [
+        'https://world-nuclear.org/information-library/country-profiles/countries-a-f/australia.aspx',
+        'https://www.ga.gov.au/scientific-topics/minerals/mineral-resources/uranium'
+      ],
+      duration: 6.0
+    },
+    {
+      timestamp: 155.0,
+      sentence: '「世界上只有台灣把核電廠蓋在距離首都人口密集核心區三十公里範圍內。」',
+      verdict: 'misinformation',
+      explanation:
+        '查核比對國際原子能總署（IAEA）地理資料庫：包括加拿大皮克靈核電廠（Pickering，距多倫多約30公里）、南韓古里核電廠（距釜山約25公里）、羅馬尼亞切爾納沃德核電廠等，皆位於主要大都會或人口密集區30公里半徑內，台灣並非全球唯一特例。',
+      sources: [
+        'https://pris.iaea.org/pris/countrystatistics/countryoverview.aspx',
+        'https://npost.tw/archives/11270'
+      ],
+      duration: 6.5
+    },
+    {
+      timestamp: 320.0,
+      sentence: '「法國電力公司長年因核電廠龐大興建成本與維護負債累累，法國民眾民調已壓倒性反對核電。」',
+      verdict: 'misinformation',
+      explanation:
+        '法國電力公社（EDF）雖面臨財務與反應爐維修成本壓力，但法國國會與主流獨立民調（如 IFOP、Odoxa）常態顯示約 60% 至 75% 法國公民支持維持核能發電以保障國家低碳能源自主與電價穩定。',
+      sources: [
+        'https://www.world-nuclear-news.org/Articles/Poll-reveals-strong-support-for-nuclear-in-France',
+        'https://www.iaea.org/bulletin/frances-nuclear-energy-future'
+      ],
+      duration: 7.0
+    },
+    {
+      timestamp: 540.0,
+      sentence: '「高階核廢料至今在全球尚無任何一座已投入運轉之永久深地質最終處置場。」',
+      verdict: 'verified',
+      explanation:
+        '在 2013-2023 年間，全球高階核廢料多以乾式貯存或水池冷卻暫存。芬蘭翁卡洛（Onkalo）永久深地質處置庫於 2024 年後才逐步取得運轉執照，為全球第一座具體即將營運之高階最終處置場。',
+      sources: [
+        'https://www.posiva.fi/en/index/finaldisposal/onkalo.html',
+        'https://www.iaea.org/newscenter/news/finlands-deep-geological-repository'
+      ],
+      duration: 6.0
+    },
+    {
+      timestamp: 750.0,
+      sentence: '「台灣未來的電力供應能否完全依賴再生能源並在無核狀態下維持零缺電零跳電？」',
+      verdict: 'unknown',
+      explanation:
+        '能源經濟學界與電力工程專家對台灣綠能建置進度、電網儲能容量、備轉容量率及天然氣接卸韌性看法分歧，屬具高度政策思辨與未定論之系統性論證。',
+      sources: [
+        'https://www.moea.gov.tw/MNS/populace/news/News.aspx',
+        'https://www.irena.org/Publications/2023/Renewable-Power-Generation-Costs'
+      ],
+      duration: 6.5
+    }
   ]
 };
 

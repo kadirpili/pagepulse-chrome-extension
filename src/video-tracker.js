@@ -158,7 +158,7 @@ export function isAdActive() {
     if (video && typeof video.src === 'string' && video.src) {
       if (
         video.src.includes('&adformat=') ||
-        video.src.includes('googlevideo.com/videoplayback?sparams=.*ad')
+        /googlevideo\.com\/videoplayback\?sparams=.*ad/.test(video.src)
       ) {
         return true;
       }
@@ -180,22 +180,21 @@ export function waitForVideoElement(timeoutMs = 5000) {
       return resolve(null);
     }
 
-    const immediate =
+    const findVideo = () =>
+      document.querySelector('ytd-reel-video-renderer[is-active] video') ||
+      document.querySelector('ytd-shorts-player video') ||
       document.querySelector('video.html5-main-video') ||
       document.querySelector('#movie_player video') ||
       document.querySelector('video');
 
+    const immediate = findVideo();
     if (immediate) {
       return resolve(immediate);
     }
 
     const startTime = Date.now();
     const interval = setInterval(() => {
-      const el =
-        document.querySelector('video.html5-main-video') ||
-        document.querySelector('#movie_player video') ||
-        document.querySelector('video');
-
+      const el = findVideo();
       if (el) {
         clearInterval(interval);
         resolve(el);

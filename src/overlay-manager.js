@@ -169,7 +169,11 @@ export class OverlayManager {
     if (!this.playerElement && typeof document !== 'undefined') {
       this.playerElement =
         (typeof document.getElementById === 'function' && document.getElementById('movie_player')) ||
-        (typeof document.querySelector === 'function' && document.querySelector('.html5-video-player'));
+        (typeof document.querySelector === 'function' &&
+          (document.querySelector('ytd-shorts-player[is-active] #player-container') ||
+           document.querySelector('ytd-reel-video-renderer[is-active] #player-container') ||
+           document.querySelector('ytd-shorts-player') ||
+           document.querySelector('.html5-video-player')));
     }
     if (!this.playerElement) {
       return null;
@@ -209,6 +213,15 @@ export class OverlayManager {
     const claimKey = `${activeClaim.timestamp}_${activeClaim.sentence}`;
     if (this.dismissedClaimKey === claimKey) {
       return;
+    }
+
+    if (this.hideTimeout) {
+      clearTimeout(this.hideTimeout);
+      this.hideTimeout = null;
+      const card = this.container?.querySelector('.yt-misinfo-card');
+      if (card) {
+        card.classList.remove('yt-misinfo-card--hiding');
+      }
     }
 
     if (this.activeClaim && `${this.activeClaim.timestamp}_${this.activeClaim.sentence}` === claimKey) {

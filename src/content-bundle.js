@@ -310,6 +310,64 @@
         ],
         duration: 5
       }
+    ],
+    // 我們真的需要核能嗎？：楊斯棓 at TEDxTaipei 2013
+    "7wFWgopJP5Q": [
+      {
+        timestamp: 45,
+        sentence: "\u300C\u6FB3\u6D32\u64C1\u6709\u5168\u4E16\u754C\u6700\u8C50\u5BCC\u7684\u923E\u7926\u5132\u91CF\uFF0C\u4F46\u6FB3\u6D32\u570B\u5167\u537B\u5805\u6301\u4E00\u5EA7\u6838\u80FD\u767C\u96FB\u5EE0\u90FD\u6C92\u6709\u84CB\u3002\u300D",
+        verdict: "verified",
+        explanation: "\u4E16\u754C\u6838\u80FD\u5354\u6703\uFF08WNA\uFF09\u8207\u6FB3\u6D32\u5730\u7403\u79D1\u5B78\u5C40\u6578\u64DA\u8B49\u5BE6\uFF1A\u6FB3\u6D32\u64C1\u6709\u5168\u7403\u7D04\u4E09\u5206\u4E4B\u4E00\u53EF\u63A1\u923E\u7926\u8CC7\u6E90\uFF0C\u70BA\u4E3B\u8981\u51FA\u53E3\u570B\uFF0C\u4F46\u81EA1998\u5E74\u901A\u904E\u300A\u8F3B\u5C04\u4FDD\u8B77\u8207\u6838\u5B89\u5168\u6CD5\u300B\u5F8C\u7ACB\u6CD5\u7981\u6B62\u570B\u5167\u6838\u80FD\u767C\u96FB\u3002",
+        sources: [
+          "https://world-nuclear.org/information-library/country-profiles/countries-a-f/australia.aspx",
+          "https://www.ga.gov.au/scientific-topics/minerals/mineral-resources/uranium"
+        ],
+        duration: 6
+      },
+      {
+        timestamp: 155,
+        sentence: "\u300C\u4E16\u754C\u4E0A\u53EA\u6709\u53F0\u7063\u628A\u6838\u96FB\u5EE0\u84CB\u5728\u8DDD\u96E2\u9996\u90FD\u4EBA\u53E3\u5BC6\u96C6\u6838\u5FC3\u5340\u4E09\u5341\u516C\u91CC\u7BC4\u570D\u5167\u3002\u300D",
+        verdict: "misinformation",
+        explanation: "\u67E5\u6838\u6BD4\u5C0D\u570B\u969B\u539F\u5B50\u80FD\u7E3D\u7F72\uFF08IAEA\uFF09\u5730\u7406\u8CC7\u6599\u5EAB\uFF1A\u5305\u62EC\u52A0\u62FF\u5927\u76AE\u514B\u9748\u6838\u96FB\u5EE0\uFF08Pickering\uFF0C\u8DDD\u591A\u502B\u591A\u7D0430\u516C\u91CC\uFF09\u3001\u5357\u97D3\u53E4\u91CC\u6838\u96FB\u5EE0\uFF08\u8DDD\u91DC\u5C71\u7D0425\u516C\u91CC\uFF09\u3001\u7F85\u99AC\u5C3C\u4E9E\u5207\u723E\u7D0D\u6C83\u5FB7\u6838\u96FB\u5EE0\u7B49\uFF0C\u7686\u4F4D\u65BC\u4E3B\u8981\u5927\u90FD\u6703\u6216\u4EBA\u53E3\u5BC6\u96C6\u534030\u516C\u91CC\u534A\u5F91\u5167\uFF0C\u53F0\u7063\u4E26\u975E\u5168\u7403\u552F\u4E00\u7279\u4F8B\u3002",
+        sources: [
+          "https://pris.iaea.org/pris/countrystatistics/countryoverview.aspx",
+          "https://npost.tw/archives/11270"
+        ],
+        duration: 6.5
+      },
+      {
+        timestamp: 320,
+        sentence: "\u300C\u6CD5\u570B\u96FB\u529B\u516C\u53F8\u9577\u5E74\u56E0\u6838\u96FB\u5EE0\u9F90\u5927\u8208\u5EFA\u6210\u672C\u8207\u7DAD\u8B77\u8CA0\u50B5\u7D2F\u7D2F\uFF0C\u6CD5\u570B\u6C11\u773E\u6C11\u8ABF\u5DF2\u58D3\u5012\u6027\u53CD\u5C0D\u6838\u96FB\u3002\u300D",
+        verdict: "misinformation",
+        explanation: "\u6CD5\u570B\u96FB\u529B\u516C\u793E\uFF08EDF\uFF09\u96D6\u9762\u81E8\u8CA1\u52D9\u8207\u53CD\u61C9\u7210\u7DAD\u4FEE\u6210\u672C\u58D3\u529B\uFF0C\u4F46\u6CD5\u570B\u570B\u6703\u8207\u4E3B\u6D41\u7368\u7ACB\u6C11\u8ABF\uFF08\u5982 IFOP\u3001Odoxa\uFF09\u5E38\u614B\u986F\u793A\u7D04 60% \u81F3 75% \u6CD5\u570B\u516C\u6C11\u652F\u6301\u7DAD\u6301\u6838\u80FD\u767C\u96FB\u4EE5\u4FDD\u969C\u570B\u5BB6\u4F4E\u78B3\u80FD\u6E90\u81EA\u4E3B\u8207\u96FB\u50F9\u7A69\u5B9A\u3002",
+        sources: [
+          "https://www.world-nuclear-news.org/Articles/Poll-reveals-strong-support-for-nuclear-in-France",
+          "https://www.iaea.org/bulletin/frances-nuclear-energy-future"
+        ],
+        duration: 7
+      },
+      {
+        timestamp: 540,
+        sentence: "\u300C\u9AD8\u968E\u6838\u5EE2\u6599\u81F3\u4ECA\u5728\u5168\u7403\u5C1A\u7121\u4EFB\u4F55\u4E00\u5EA7\u5DF2\u6295\u5165\u904B\u8F49\u4E4B\u6C38\u4E45\u6DF1\u5730\u8CEA\u6700\u7D42\u8655\u7F6E\u5834\u3002\u300D",
+        verdict: "verified",
+        explanation: "\u5728 2013-2023 \u5E74\u9593\uFF0C\u5168\u7403\u9AD8\u968E\u6838\u5EE2\u6599\u591A\u4EE5\u4E7E\u5F0F\u8CAF\u5B58\u6216\u6C34\u6C60\u51B7\u537B\u66AB\u5B58\u3002\u82AC\u862D\u7FC1\u5361\u6D1B\uFF08Onkalo\uFF09\u6C38\u4E45\u6DF1\u5730\u8CEA\u8655\u7F6E\u5EAB\u65BC 2024 \u5E74\u5F8C\u624D\u9010\u6B65\u53D6\u5F97\u904B\u8F49\u57F7\u7167\uFF0C\u70BA\u5168\u7403\u7B2C\u4E00\u5EA7\u5177\u9AD4\u5373\u5C07\u71DF\u904B\u4E4B\u9AD8\u968E\u6700\u7D42\u8655\u7F6E\u5834\u3002",
+        sources: [
+          "https://www.posiva.fi/en/index/finaldisposal/onkalo.html",
+          "https://www.iaea.org/newscenter/news/finlands-deep-geological-repository"
+        ],
+        duration: 6
+      },
+      {
+        timestamp: 750,
+        sentence: "\u300C\u53F0\u7063\u672A\u4F86\u7684\u96FB\u529B\u4F9B\u61C9\u80FD\u5426\u5B8C\u5168\u4F9D\u8CF4\u518D\u751F\u80FD\u6E90\u4E26\u5728\u7121\u6838\u72C0\u614B\u4E0B\u7DAD\u6301\u96F6\u7F3A\u96FB\u96F6\u8DF3\u96FB\uFF1F\u300D",
+        verdict: "unknown",
+        explanation: "\u80FD\u6E90\u7D93\u6FDF\u5B78\u754C\u8207\u96FB\u529B\u5DE5\u7A0B\u5C08\u5BB6\u5C0D\u53F0\u7063\u7DA0\u80FD\u5EFA\u7F6E\u9032\u5EA6\u3001\u96FB\u7DB2\u5132\u80FD\u5BB9\u91CF\u3001\u5099\u8F49\u5BB9\u91CF\u7387\u53CA\u5929\u7136\u6C23\u63A5\u5378\u97CC\u6027\u770B\u6CD5\u5206\u6B67\uFF0C\u5C6C\u5177\u9AD8\u5EA6\u653F\u7B56\u601D\u8FA8\u8207\u672A\u5B9A\u8AD6\u4E4B\u7CFB\u7D71\u6027\u8AD6\u8B49\u3002",
+        sources: [
+          "https://www.moea.gov.tw/MNS/populace/news/News.aspx",
+          "https://www.irena.org/Publications/2023/Renewable-Power-Generation-Costs"
+        ],
+        duration: 6.5
+      }
     ]
   };
   function fnv1a(str) {
@@ -545,13 +603,14 @@
       if (typeof document === "undefined") {
         return resolve(null);
       }
-      const immediate = document.querySelector("video.html5-main-video") || document.querySelector("#movie_player video") || document.querySelector("video");
+      const findVideo = () => document.querySelector("ytd-reel-video-renderer[is-active] video") || document.querySelector("ytd-shorts-player video") || document.querySelector("video.html5-main-video") || document.querySelector("#movie_player video") || document.querySelector("video");
+      const immediate = findVideo();
       if (immediate) {
         return resolve(immediate);
       }
       const startTime = Date.now();
       const interval = setInterval(() => {
-        const el = document.querySelector("video.html5-main-video") || document.querySelector("#movie_player video") || document.querySelector("video");
+        const el = findVideo();
         if (el) {
           clearInterval(interval);
           resolve(el);
@@ -682,7 +741,7 @@
         this.playerElement = playerElement;
       }
       if (!this.playerElement && typeof document !== "undefined") {
-        this.playerElement = typeof document.getElementById === "function" && document.getElementById("movie_player") || typeof document.querySelector === "function" && document.querySelector(".html5-video-player");
+        this.playerElement = typeof document.getElementById === "function" && document.getElementById("movie_player") || typeof document.querySelector === "function" && (document.querySelector("ytd-shorts-player[is-active] #player-container") || document.querySelector("ytd-reel-video-renderer[is-active] #player-container") || document.querySelector("ytd-shorts-player") || document.querySelector(".html5-video-player"));
       }
       if (!this.playerElement) {
         return null;
