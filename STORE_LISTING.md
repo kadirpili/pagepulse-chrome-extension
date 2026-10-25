@@ -81,14 +81,20 @@ Google requires explicit justification for each permission requested in `manifes
 Analyze spoken YouTube video transcripts in real-time to detect factual misinformation and display contextual warning overlays with citations.
 ```
 
-### Permission Justifications
+### Standard Permissions Justifications
 
 | Permission | Justification Copy to Paste |
 | :--- | :--- |
 | **`storage`** | `Used to persist user interface preferences (such as overlay display toggles, verdict filters, and drawer collapsed state) and cache retrieved claim datasets locally to prevent redundant network calls.` |
 | **`activeTab`** | `Required to interact with the active YouTube video player DOM element, synchronizing timeline overlays with the video's current playback time and allowing click-to-seek timestamp navigation.` |
-| **`*://*.youtube.com/*`** | `Required to inject the overlay cards, status badge, and interactive timeline drawer component directly into YouTube video watch pages.` |
-| **`https://youtube-factcheck-api.vercel.app/*`** | `Enables the extension service worker to communicate securely with the dedicated fact-checking backend API powered by Gemini AI.` |
+
+### Host Permissions Justifications
+*(Google considers any URL match pattern in `host_permissions` and `content_scripts` as a host permission)*
+
+| Match Pattern | Field | Justification Copy to Paste |
+| :--- | :--- | :--- |
+| **`*://*.youtube.com/*`** | `content_scripts` & `host_permissions` | `Required to inject the real-time fact-checking overlay banner, floating status badge, and interactive chronological claim drawer directly into YouTube watch pages, as well as synchronize timestamps with the active HTML5 video element.` |
+| **`https://youtube-factcheck-api.vercel.app/*`** | `host_permissions` | `Required for the extension background service worker to send the YouTube video ID and fetch factual claim analysis and authoritative citations from our secure production fact-checking backend API powered by Gemini AI.` |
 
 ### Data Usage Declarations
 When prompted on user data collection:
@@ -104,10 +110,10 @@ When prompted on user data collection:
 
 | Asset | Specifications | Status |
 | :--- | :--- | :--- |
-| **Store Icon** | 128 x 128 px (PNG format) | ✅ Available at [`icons/icon128.png`](icons/icon128.png) |
-| **Small Promo Tile** *(Optional)* | 440 x 280 px (PNG/JPEG) | Can be created from icon + title |
-| **Marquee Promo Tile** *(Optional)* | 920 x 680 px (PNG/JPEG) | Featured promotional banner |
-| **Screenshots** *(Required)* | 1280 x 800 px or 640 x 400 px (At least 1 screenshot of the extension in action on YouTube) | Take 1–2 screenshots of the video player with overlay and open drawer. |
+| **Store Icon** | 128 x 128 px (PNG format) | ✅ Ready at [`icons/icon128.png`](icons/icon128.png) |
+| **Screenshot 1** | 1280 x 800 px (Real-time in-video overlay card) | ✅ Ready at [`screenshots/screenshot-1-overlay.png`](screenshots/screenshot-1-overlay.png) |
+| **Screenshot 2** | 1280 x 800 px (Interactive timeline drawer) | ✅ Ready at [`screenshots/screenshot-2-drawer.png`](screenshots/screenshot-2-drawer.png) |
+| **Screenshot 3** | 1280 x 800 px (Extension popup interface) | ✅ Ready at [`screenshots/screenshot-3-popup.png`](screenshots/screenshot-3-popup.png) |
 
 ---
 
