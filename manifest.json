@@ -9,6 +9,7 @@
   ],
   "host_permissions": [
     "*://*.youtube.com/*",
+    "https://youtube-factcheck-api.vercel.app/*",
     "https://d3tuhog92nak7r.cloudfront.net/*",
     "http://127.0.0.1:3000/*",
     "http://localhost:3000/*"

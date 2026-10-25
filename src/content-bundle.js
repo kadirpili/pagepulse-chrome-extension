@@ -1033,7 +1033,7 @@
     claims.sort((a, b) => a.timestamp - b.timestamp);
     return claims;
   }
-  var DEFAULT_PROD_ENDPOINT = "http://127.0.0.1:3000/check";
+  var DEFAULT_PROD_ENDPOINT = "https://youtube-factcheck-api.vercel.app/check";
   var DEFAULT_AUTH_BEARER = "91b24cc09314aca901d8153cdacd741a730345f394ed61aa20b02ae92ea9b9fb";
   var claimsCache = /* @__PURE__ */ new Map();
   var inFlightRequests = /* @__PURE__ */ new Map();
@@ -1221,7 +1221,7 @@
         };
         if (method === "POST") {
           headers["Content-Type"] = "application/json";
-          const isLocalPila = baseEndpoint.includes("127.0.0.1") || baseEndpoint.includes("localhost");
+          const isLocalPila = baseEndpoint.includes("127.0.0.1") || baseEndpoint.includes("localhost") || baseEndpoint.includes("vercel.app");
           fetchOptions.body = isLocalPila ? JSON.stringify({ url: `https://www.youtube.com/watch?v=${cleanId}` }) : JSON.stringify({ videoId: cleanId });
         } else {
           const u = new URL(baseEndpoint);
@@ -2216,8 +2216,8 @@
     filterVerdict: "all",
     // 'all' | 'misinformation' | 'verified' | 'unknown'
     mode: "prod",
-    // Default to PROD mode (local Pila server on localhost:3000)
-    apiEndpoint: "http://127.0.0.1:3000/check",
+    // Default to PROD mode (live Vercel API server)
+    apiEndpoint: "https://youtube-factcheck-api.vercel.app/check",
     apiKey: ""
   });
   function hasChromeStorage() {

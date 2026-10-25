@@ -1081,7 +1081,7 @@ export function generateDeterministicClaims(videoId, options = {}) {
   return claims;
 }
 
-export const DEFAULT_PROD_ENDPOINT = 'http://127.0.0.1:3000/check';
+export const DEFAULT_PROD_ENDPOINT = 'https://youtube-factcheck-api.vercel.app/check';
 export const CLOUDFRONT_ENDPOINT = 'https://d3tuhog92nak7r.cloudfront.net/factcheck';
 export const DEFAULT_AUTH_BEARER = '91b24cc09314aca901d8153cdacd741a730345f394ed61aa20b02ae92ea9b9fb';
 
@@ -1399,7 +1399,7 @@ export async function fetchClaimsFromBackend(videoId, endpoint = DEFAULT_PROD_EN
 
       if (method === 'POST') {
         headers['Content-Type'] = 'application/json';
-        const isLocalPila = baseEndpoint.includes('127.0.0.1') || baseEndpoint.includes('localhost');
+        const isLocalPila = baseEndpoint.includes('127.0.0.1') || baseEndpoint.includes('localhost') || baseEndpoint.includes('vercel.app');
         fetchOptions.body = isLocalPila
           ? JSON.stringify({ url: `https://www.youtube.com/watch?v=${cleanId}` })
           : JSON.stringify({ videoId: cleanId });
