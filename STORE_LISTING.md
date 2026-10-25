@@ -96,6 +96,15 @@ Analyze spoken YouTube video transcripts in real-time to detect factual misinfor
 | **`*://*.youtube.com/*`** | `content_scripts` & `host_permissions` | `Required to inject the real-time fact-checking overlay banner, floating status badge, and interactive chronological claim drawer directly into YouTube watch pages, as well as synchronize timestamps with the active HTML5 video element.` |
 | **`https://youtube-factcheck-api.vercel.app/*`** | `host_permissions` | `Required for the extension background service worker to send the YouTube video ID and fetch factual claim analysis and authoritative citations from our secure production fact-checking backend API powered by Gemini AI.` |
 
+### Remote Code Declaration
+When asked: *"Does your extension use remote code?"*
+* **Select**: **No, I am not using remote code**
+* **Verification & Technical Details**:
+  - The extension is fully Manifest V3 compliant.
+  - 100% of the code (JavaScript, CSS, HTML) is pre-bundled and packaged inside the `.zip` archive (`src/content-bundle.js`, `src/background.js`, `popup/popup.js`).
+  - No external `<script>` tags, remote Wasm binaries, `eval()`, or `new Function()` string executions exist anywhere in the extension.
+  - Network calls to `https://youtube-factcheck-api.vercel.app` only fetch structured JSON data payloads (timestamps and fact-check explanations), never executable code.
+
 ### Data Usage Declarations
 When prompted on user data collection:
 * **Does this extension collect user data?** -> Select **No** (The extension does not collect, transmit, or store personally identifiable information, browsing history outside YouTube video IDs, financial info, or health data).
