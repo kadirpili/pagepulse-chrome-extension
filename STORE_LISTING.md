@@ -126,7 +126,22 @@ When prompted on user data collection:
 
 ---
 
-## 5. Privacy Policy Template (If requested)
+## 5. Privacy Policy URLs for Chrome Web Store
+
+Paste one of the following live URLs into the **Privacy policy** input field in the Developer Dashboard:
+
+* **Primary Hosted URL (Recommended)**:
+  ```text
+  https://youtube-factcheck-api.vercel.app/privacy
+  ```
+* **GitHub Repository URL**:
+  ```text
+  https://github.com/kadirpili/pagepulse-chrome-extension/blob/main/PRIVACY_POLICY.md
+  ```
+
+---
+
+## 6. Privacy Policy Full Text
 
 ```text
 Privacy Policy for YouTube Misinformation Detector
