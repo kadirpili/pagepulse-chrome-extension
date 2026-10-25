@@ -45,14 +45,42 @@ async function init() {
     }
   });
 
+  // Intercept history.pushState & history.replaceState for instantaneous Shorts transitions
+  if (typeof window !== 'undefined' && window.history) {
+    const origPushState = window.history.pushState;
+    if (typeof origPushState === 'function') {
+      window.history.pushState = function (...args) {
+        const ret = origPushState.apply(this, args);
+        handleNavigation();
+        return ret;
+      };
+    }
+
+    const origReplaceState = window.history.replaceState;
+    if (typeof origReplaceState === 'function') {
+      window.history.replaceState = function (...args) {
+        const ret = origReplaceState.apply(this, args);
+        handleNavigation();
+        return ret;
+      };
+    }
+  }
+
   // Listen to YouTube's SPA navigation lifecycle events
   if (typeof document !== 'undefined') {
     document.addEventListener('yt-navigate-finish', handleNavigation);
+    document.addEventListener('yt-page-data-updated', handleNavigation);
+    document.addEventListener('yt-action', (e) => {
+      const name = e?.detail?.actionName;
+      if (typeof name === 'string' && (name.includes('reel') || name.includes('navigate') || name.includes('shorts'))) {
+        handleNavigation();
+      }
+    });
   }
   if (typeof window !== 'undefined') {
     window.addEventListener('popstate', handleNavigation);
-    // Regular polling fallback for YouTube SPA URL changes
-    setInterval(handleNavigation, 1000);
+    // Regular polling fallback for YouTube SPA & Shorts URL changes
+    setInterval(handleNavigation, 400);
   }
 
   // Setup message listener for popup queries
@@ -284,14 +312,20 @@ async function startVideoSession(videoId) {
  * @param {string} [errorMessage] - Optional error details
  */
 function mountStatusIndicator(videoId, countOrStatus, errorMessage = '') {
+  const isShorts =
+    typeof window !== 'undefined' &&
+    window.location &&
+    typeof window.location.pathname === 'string' &&
+    window.location.pathname.startsWith('/shorts');
+
   let indicator = document.getElementById('yt-misinfo-status-badge');
   if (!indicator) {
     indicator = document.createElement('div');
     indicator.id = 'yt-misinfo-status-badge';
     indicator.style.cssText = `
       position: fixed;
-      bottom: 24px;
-      left: 24px;
+      bottom: ${isShorts ? '90px' : '24px'};
+      left: ${isShorts ? '16px' : '24px'};
       z-index: 999999;
       background: #0f0f0f;
       color: #fff;
@@ -313,6 +347,9 @@ function mountStatusIndicator(videoId, countOrStatus, errorMessage = '') {
       if (drawerManager) drawerManager.open();
     });
     document.body.appendChild(indicator);
+  } else {
+    indicator.style.bottom = isShorts ? '90px' : '24px';
+    indicator.style.left = isShorts ? '16px' : '24px';
   }
 
   const isProd = currentSettings.mode === 'prod';

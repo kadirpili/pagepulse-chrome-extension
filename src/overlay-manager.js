@@ -186,13 +186,30 @@ export class OverlayManager {
       this.playerElement = playerElement;
     }
     if (!this.playerElement && typeof document !== 'undefined') {
-      this.playerElement =
-        (typeof document.getElementById === 'function' && document.getElementById('movie_player')) ||
-        (typeof document.querySelector === 'function' &&
-          (document.querySelector('ytd-shorts-player[is-active] #player-container') ||
-           document.querySelector('ytd-reel-video-renderer[is-active] #player-container') ||
-           document.querySelector('ytd-shorts-player') ||
-           document.querySelector('.html5-video-player')));
+      const isShorts =
+        typeof window !== 'undefined' &&
+        window.location &&
+        typeof window.location.pathname === 'string' &&
+        window.location.pathname.startsWith('/shorts');
+
+      if (isShorts) {
+        this.playerElement =
+          document.querySelector('ytd-reel-video-renderer[is-active] #player-container') ||
+          document.querySelector('ytd-reel-video-renderer[is-active] .html5-video-player') ||
+          document.querySelector('ytd-reel-video-renderer[is-active]') ||
+          document.querySelector('ytd-shorts-player[is-active] #player-container') ||
+          document.querySelector('ytd-shorts-player') ||
+          (typeof document.getElementById === 'function' && document.getElementById('movie_player')) ||
+          (typeof document.querySelector === 'function' && document.querySelector('.html5-video-player'));
+      } else {
+        this.playerElement =
+          (typeof document.getElementById === 'function' && document.getElementById('movie_player')) ||
+          (typeof document.querySelector === 'function' &&
+            (document.querySelector('ytd-shorts-player[is-active] #player-container') ||
+             document.querySelector('ytd-reel-video-renderer[is-active] #player-container') ||
+             document.querySelector('ytd-shorts-player') ||
+             document.querySelector('.html5-video-player')));
+      }
     }
     if (!this.playerElement) {
       return null;

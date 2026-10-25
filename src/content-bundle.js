@@ -1408,19 +1408,36 @@
     }
     return false;
   }
+  function findActiveVideo() {
+    if (typeof document === "undefined") return null;
+    const isShorts = typeof window !== "undefined" && window.location && typeof window.location.pathname === "string" && window.location.pathname.startsWith("/shorts");
+    if (isShorts) {
+      const activeReel = document.querySelector("ytd-reel-video-renderer[is-active]");
+      if (activeReel) {
+        const v = activeReel.querySelector("video");
+        if (v) return v;
+      }
+      const shortsVideo = document.querySelector("ytd-shorts-player[is-active] video") || document.querySelector("#shorts-player video") || document.querySelector("ytd-shorts-player video");
+      if (shortsVideo) return shortsVideo;
+      const allVideos = Array.from(document.querySelectorAll("video"));
+      for (const v of allVideos) {
+        if (!v.paused && v.currentTime > 0) return v;
+      }
+    }
+    return document.querySelector("ytd-reel-video-renderer[is-active] video") || document.querySelector("ytd-shorts-player video") || document.querySelector("video.html5-main-video") || document.querySelector("#movie_player video") || document.querySelector("video");
+  }
   function waitForVideoElement(timeoutMs = 5e3) {
     return new Promise((resolve) => {
       if (typeof document === "undefined") {
         return resolve(null);
       }
-      const findVideo = () => document.querySelector("ytd-reel-video-renderer[is-active] video") || document.querySelector("ytd-shorts-player video") || document.querySelector("video.html5-main-video") || document.querySelector("#movie_player video") || document.querySelector("video");
-      const immediate = findVideo();
+      const immediate = findActiveVideo();
       if (immediate) {
         return resolve(immediate);
       }
       const startTime = Date.now();
       const interval = setInterval(() => {
-        const el = findVideo();
+        const el = findActiveVideo();
         if (el) {
           clearInterval(interval);
           resolve(el);
@@ -1561,7 +1578,12 @@
         this.playerElement = playerElement;
       }
       if (!this.playerElement && typeof document !== "undefined") {
-        this.playerElement = typeof document.getElementById === "function" && document.getElementById("movie_player") || typeof document.querySelector === "function" && (document.querySelector("ytd-shorts-player[is-active] #player-container") || document.querySelector("ytd-reel-video-renderer[is-active] #player-container") || document.querySelector("ytd-shorts-player") || document.querySelector(".html5-video-player"));
+        const isShorts = typeof window !== "undefined" && window.location && typeof window.location.pathname === "string" && window.location.pathname.startsWith("/shorts");
+        if (isShorts) {
+          this.playerElement = document.querySelector("ytd-reel-video-renderer[is-active] #player-container") || document.querySelector("ytd-reel-video-renderer[is-active] .html5-video-player") || document.querySelector("ytd-reel-video-renderer[is-active]") || document.querySelector("ytd-shorts-player[is-active] #player-container") || document.querySelector("ytd-shorts-player") || typeof document.getElementById === "function" && document.getElementById("movie_player") || typeof document.querySelector === "function" && document.querySelector(".html5-video-player");
+        } else {
+          this.playerElement = typeof document.getElementById === "function" && document.getElementById("movie_player") || typeof document.querySelector === "function" && (document.querySelector("ytd-shorts-player[is-active] #player-container") || document.querySelector("ytd-reel-video-renderer[is-active] #player-container") || document.querySelector("ytd-shorts-player") || document.querySelector(".html5-video-player"));
+        }
       }
       if (!this.playerElement) {
         return null;
@@ -2295,12 +2317,37 @@
         await reloadClaimsForActiveVideo();
       }
     });
+    if (typeof window !== "undefined" && window.history) {
+      const origPushState = window.history.pushState;
+      if (typeof origPushState === "function") {
+        window.history.pushState = function(...args) {
+          const ret = origPushState.apply(this, args);
+          handleNavigation();
+          return ret;
+        };
+      }
+      const origReplaceState = window.history.replaceState;
+      if (typeof origReplaceState === "function") {
+        window.history.replaceState = function(...args) {
+          const ret = origReplaceState.apply(this, args);
+          handleNavigation();
+          return ret;
+        };
+      }
+    }
     if (typeof document !== "undefined") {
       document.addEventListener("yt-navigate-finish", handleNavigation);
+      document.addEventListener("yt-page-data-updated", handleNavigation);
+      document.addEventListener("yt-action", (e) => {
+        const name = e?.detail?.actionName;
+        if (typeof name === "string" && (name.includes("reel") || name.includes("navigate") || name.includes("shorts"))) {
+          handleNavigation();
+        }
+      });
     }
     if (typeof window !== "undefined") {
       window.addEventListener("popstate", handleNavigation);
-      setInterval(handleNavigation, 1e3);
+      setInterval(handleNavigation, 400);
     }
     if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage) {
       chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -2469,14 +2516,15 @@
     activeVideoElement.addEventListener("seeked", onSeeked);
   }
   function mountStatusIndicator(videoId, countOrStatus, errorMessage = "") {
+    const isShorts = typeof window !== "undefined" && window.location && typeof window.location.pathname === "string" && window.location.pathname.startsWith("/shorts");
     let indicator = document.getElementById("yt-misinfo-status-badge");
     if (!indicator) {
       indicator = document.createElement("div");
       indicator.id = "yt-misinfo-status-badge";
       indicator.style.cssText = `
       position: fixed;
-      bottom: 24px;
-      left: 24px;
+      bottom: ${isShorts ? "90px" : "24px"};
+      left: ${isShorts ? "16px" : "24px"};
       z-index: 999999;
       background: #0f0f0f;
       color: #fff;
@@ -2498,6 +2546,9 @@
         if (drawerManager) drawerManager.open();
       });
       document.body.appendChild(indicator);
+    } else {
+      indicator.style.bottom = isShorts ? "90px" : "24px";
+      indicator.style.left = isShorts ? "16px" : "24px";
     }
     const isProd = currentSettings.mode === "prod";
     const modeTag = isProd ? "PROD" : "TEST";

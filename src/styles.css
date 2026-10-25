@@ -47,6 +47,26 @@
   max-width: 440px !important;
 }
 
+/* YouTube Shorts portrait player overlay adaptation */
+ytd-reel-video-renderer .yt-misinfo-overlay,
+ytd-shorts .yt-misinfo-overlay,
+ytd-shorts-player .yt-misinfo-overlay,
+ytd-reel-video-renderer .yt-misinfo-overlay-container,
+ytd-shorts .yt-misinfo-overlay-container {
+  top: 16px !important;
+  right: 16px !important;
+  max-width: 310px !important;
+  width: calc(100% - 72px) !important;
+  z-index: 1000 !important;
+}
+
+ytd-reel-video-renderer .yt-misinfo-card,
+ytd-shorts .yt-misinfo-card,
+ytd-shorts-player .yt-misinfo-card {
+  padding: 10px 14px !important;
+  border-radius: 8px !important;
+}
+
 .yt-misinfo-card {
   pointer-events: auto !important;
   background-color: var(--yt-spec-raised-background, rgba(28, 28, 28, 0.95)) !important;

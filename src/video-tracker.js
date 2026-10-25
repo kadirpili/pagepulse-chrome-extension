@@ -169,6 +169,52 @@ export function isAdActive() {
 }
 
 /**
+ * Discovers the active YouTube HTML5 video element (supporting both standard Watch and Shorts pages).
+ *
+ * @returns {HTMLVideoElement|null}
+ */
+export function findActiveVideo() {
+  if (typeof document === 'undefined') return null;
+
+  const isShorts =
+    typeof window !== 'undefined' &&
+    window.location &&
+    typeof window.location.pathname === 'string' &&
+    window.location.pathname.startsWith('/shorts');
+
+  if (isShorts) {
+    // 1. Check for active reel renderer video
+    const activeReel = document.querySelector('ytd-reel-video-renderer[is-active]');
+    if (activeReel) {
+      const v = activeReel.querySelector('video');
+      if (v) return v;
+    }
+
+    // 2. Check for active shorts player
+    const shortsVideo =
+      document.querySelector('ytd-shorts-player[is-active] video') ||
+      document.querySelector('#shorts-player video') ||
+      document.querySelector('ytd-shorts-player video');
+    if (shortsVideo) return shortsVideo;
+
+    // 3. Find currently playing video on screen
+    const allVideos = Array.from(document.querySelectorAll('video'));
+    for (const v of allVideos) {
+      if (!v.paused && v.currentTime > 0) return v;
+    }
+  }
+
+  // Standard YouTube watch page selectors
+  return (
+    document.querySelector('ytd-reel-video-renderer[is-active] video') ||
+    document.querySelector('ytd-shorts-player video') ||
+    document.querySelector('video.html5-main-video') ||
+    document.querySelector('#movie_player video') ||
+    document.querySelector('video')
+  );
+}
+
+/**
  * Discovers the active YouTube HTML5 video element with retry polling.
  *
  * @param {number} [timeoutMs=5000] - Timeout in milliseconds.
@@ -180,21 +226,14 @@ export function waitForVideoElement(timeoutMs = 5000) {
       return resolve(null);
     }
 
-    const findVideo = () =>
-      document.querySelector('ytd-reel-video-renderer[is-active] video') ||
-      document.querySelector('ytd-shorts-player video') ||
-      document.querySelector('video.html5-main-video') ||
-      document.querySelector('#movie_player video') ||
-      document.querySelector('video');
-
-    const immediate = findVideo();
+    const immediate = findActiveVideo();
     if (immediate) {
       return resolve(immediate);
     }
 
     const startTime = Date.now();
     const interval = setInterval(() => {
-      const el = findVideo();
+      const el = findActiveVideo();
       if (el) {
         clearInterval(interval);
         resolve(el);
