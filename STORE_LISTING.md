@@ -4,6 +4,20 @@ Use the copy and details below when filling out your extension listing on the [C
 
 ---
 
+## 0. Mandatory Publisher Setup: Email Verification ⚠️
+
+Before Google allows you to submit any extension for review, you must verify your publisher contact email address:
+
+1. In the [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole), look at the left sidebar menu.
+2. Click **Account** (or the **Gear ⚙️ Settings** icon at the bottom of the sidebar).
+3. Under **Contact information**, locate the **Publisher email** (or **Contact email**) field.
+4. Enter your email address and click **Verify email** (or **Save**).
+5. Open your email inbox (check Spam/Promotions if not found immediately) and look for an email from **Google Chrome Web Store** with subject: *"Verify your contact email"*.
+6. Click the verification link in the email.
+7. Return to your extension draft in the Developer Dashboard and refresh the page. The warning banner will vanish, and the blue **"Submit for Review"** button will be unlocked.
+
+---
+
 ## 1. Store Listing Information
 
 ### Extension Name (Max 45 characters)
