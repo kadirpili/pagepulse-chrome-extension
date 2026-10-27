@@ -1,5 +1,6 @@
 import { getSettings, saveSettings } from '../src/storage.js';
 import { parseYouTubeVideoId, isYouTubeWatchUrl } from '../src/youtube-url.js';
+import { trackEvent } from '../src/analytics.js';
 
 const dom = {
   statusSubtitle: document.getElementById('status-subtitle'),
@@ -31,30 +32,40 @@ async function initPopup() {
 function setupEventListeners() {
   if (dom.toggleEnabled) {
     dom.toggleEnabled.addEventListener('change', async () => {
-      await saveSettings({ enabled: dom.toggleEnabled.checked });
+      const enabled = dom.toggleEnabled.checked;
+      await saveSettings({ enabled });
+      trackEvent('detector_toggled', { enabled });
     });
   }
 
   if (dom.toggleOverlays) {
     dom.toggleOverlays.addEventListener('change', async () => {
-      await saveSettings({ showOverlays: dom.toggleOverlays.checked });
+      const showOverlays = dom.toggleOverlays.checked;
+      await saveSettings({ showOverlays });
+      trackEvent('overlays_toggled', { showOverlays });
     });
   }
 
   if (dom.selectFilter) {
     dom.selectFilter.addEventListener('change', async () => {
-      await saveSettings({ filterVerdict: dom.selectFilter.value });
+      const filterVerdict = dom.selectFilter.value;
+      await saveSettings({ filterVerdict });
+      trackEvent('filter_changed', { filterVerdict });
     });
   }
 
   if (dom.selectMode) {
     dom.selectMode.addEventListener('change', async () => {
-      await saveSettings({ mode: dom.selectMode.value });
+      const mode = dom.selectMode.value;
+      await saveSettings({ mode });
+      trackEvent('mode_toggled', { mode });
     });
   }
 }
 
 async function queryCurrentTab() {
+  trackEvent('popup_opened');
+
   if (typeof chrome === 'undefined' || !chrome.tabs || !chrome.tabs.query) {
     showNonYouTubeView('Extension preview mode');
     return;

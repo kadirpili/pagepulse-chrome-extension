@@ -55,11 +55,12 @@ This local storage never leaves your browser and can be cleared at any time by u
 
 ---
 
-## 5. Third-Party Services & AI Processing
+## 5. Third-Party Services & Telemetry
 
-To deliver fact-checking analysis, our backend interfaces with:
+To deliver fact-checking analysis and monitor product performance, the extension interfaces with:
 * **Google Gemini API**: Processes public speech transcripts to evaluate claim veracity and cite reputable sources (e.g., NASA, Reuters, AP News, Wikipedia). No user identifiers are forwarded to Google.
 * **Supadata API**: Fetches public YouTube video subtitles.
+* **Google Analytics 4 (GA4)**: Anonymous, aggregated telemetry events (such as extension installs, popup views, and feature toggles) are transmitted via the official Measurement Protocol to measure product stability and adoption. No personally identifiable information (PII), browsing history outside YouTube video IDs, or user credentials are ever collected or sent.
 
 Neither service receives personal user information or cookies.
 
@@ -71,6 +72,7 @@ Neither service receives personal user information or cookies.
 * **`activeTab`**: Allows interaction with the active YouTube video player DOM to synchronize warning cards with video playback.
 * **`*://*.youtube.com/*`**: Limits the extension's execution exclusively to YouTube pages where fact-checking is requested.
 * **`https://youtube-factcheck-api.vercel.app/*`**: Secure HTTPS endpoint for querying fact-checks for the active video ID.
+* **`https://www.google-analytics.com/*`**: Secure endpoint for transmitting anonymous product telemetry without executing remote code.
 
 ---
 

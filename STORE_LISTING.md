@@ -109,6 +109,7 @@ Analyze spoken YouTube video transcripts in real-time to detect factual misinfor
 | :--- | :--- | :--- |
 | **`*://*.youtube.com/*`** | `content_scripts` & `host_permissions` | `Required to inject the real-time fact-checking overlay banner, floating status badge, and interactive chronological claim drawer directly into YouTube watch pages, as well as synchronize timestamps with the active HTML5 video element.` |
 | **`https://youtube-factcheck-api.vercel.app/*`** | `host_permissions` | `Required for the extension background service worker to send the YouTube video ID and fetch factual claim analysis and authoritative citations from our secure production fact-checking backend API powered by Gemini AI.` |
+| **`https://www.google-analytics.com/*`** | `host_permissions` | `Required to transmit non-PII, aggregated telemetry metrics (such as popup opens and feature toggles) via the official Google Analytics 4 Measurement Protocol to understand product usage without remote code.` |
 
 ### Remote Code Declaration
 When asked: *"Does your extension use remote code?"*

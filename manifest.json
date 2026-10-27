@@ -9,7 +9,8 @@
   ],
   "host_permissions": [
     "*://*.youtube.com/*",
-    "https://youtube-factcheck-api.vercel.app/*"
+    "https://youtube-factcheck-api.vercel.app/*",
+    "https://www.google-analytics.com/*"
   ],
   "action": {
     "default_popup": "popup/popup.html",

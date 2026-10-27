@@ -2288,6 +2288,74 @@
     };
   }
 
+  // src/analytics.js
+  var GA_MEASUREMENT_ID = "G-2W1DT6P31T";
+  var GA_ENDPOINT = "https://www.google-analytics.com/g/collect";
+  var SESSION_TIMEOUT_MS = 30 * 60 * 1e3;
+  var cachedClientId = null;
+  var currentSessionId = null;
+  var lastActivityTime = 0;
+  async function getOrCreateClientId() {
+    if (cachedClientId) return cachedClientId;
+    if (typeof chrome === "undefined" || !chrome.storage || !chrome.storage.local) {
+      cachedClientId = "anon_" + Math.random().toString(36).substring(2, 12);
+      return cachedClientId;
+    }
+    return new Promise((resolve) => {
+      chrome.storage.local.get(["ga_client_id"], (result) => {
+        if (result && result.ga_client_id) {
+          cachedClientId = result.ga_client_id;
+          return resolve(cachedClientId);
+        }
+        const newId = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "ga_" + Date.now() + "_" + Math.random().toString(36).substring(2, 9);
+        cachedClientId = newId;
+        chrome.storage.local.set({ ga_client_id: newId }, () => {
+          resolve(newId);
+        });
+      });
+    });
+  }
+  function getSessionId() {
+    const now = Date.now();
+    if (!currentSessionId || now - lastActivityTime > SESSION_TIMEOUT_MS) {
+      currentSessionId = Math.floor(now / 1e3).toString();
+    }
+    lastActivityTime = now;
+    return currentSessionId;
+  }
+  async function trackEvent(eventName, eventParams = {}) {
+    try {
+      const clientId = await getOrCreateClientId();
+      const sessionId = getSessionId();
+      const params = new URLSearchParams({
+        v: "2",
+        tid: GA_MEASUREMENT_ID,
+        cid: clientId,
+        sid: sessionId,
+        en: eventName,
+        _p: Date.now().toString(),
+        ul: typeof navigator !== "undefined" ? (navigator.language || "en-us").toLowerCase() : "en-us"
+      });
+      for (const [key, value] of Object.entries(eventParams)) {
+        if (value !== void 0 && value !== null) {
+          params.set(`ep.${key}`, String(value));
+        }
+      }
+      const targetUrl = `${GA_ENDPOINT}?${params.toString()}`;
+      if (typeof fetch === "function") {
+        await fetch(targetUrl, {
+          method: "POST",
+          mode: "no-cors",
+          keepalive: true
+        });
+      } else if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
+        navigator.sendBeacon(targetUrl);
+      }
+    } catch (err) {
+      console.debug("[YouTube Misinfo Analytics] Dispatch note:", err.message);
+    }
+  }
+
   // src/content.js
   var activeVideoId = null;
   var currentClaims = [];
@@ -2467,6 +2535,7 @@
     overlayManager = new OverlayManager();
     overlayManager.mount();
     overlayManager.onViewTimeline(() => {
+      trackEvent("timeline_opened_from_overlay", { videoId: activeVideoId });
       if (drawerManager) {
         drawerManager.open();
       }
@@ -2474,6 +2543,7 @@
     drawerManager = new DrawerManager();
     drawerManager.mount();
     drawerManager.onSeek((targetTime) => {
+      trackEvent("timeline_seek_clicked", { videoId: activeVideoId, targetTime });
       if (activeVideoElement) {
         seekToTimestamp(activeVideoElement, targetTime);
         if (overlayManager) {
@@ -2506,6 +2576,16 @@
         drawerManager.setFilter(currentSettings.filterVerdict);
       }
       mountStatusIndicator(videoId, currentClaims.length);
+      const isShorts = typeof window !== "undefined" && window.location && typeof window.location.pathname === "string" && window.location.pathname.startsWith("/shorts");
+      const misinfoCount = currentClaims.filter(
+        (c) => c.verdict === "misinformation" || typeof c.score === "number" && c.score >= 2
+      ).length;
+      trackEvent("video_factchecked", {
+        videoId,
+        totalClaims: currentClaims.length,
+        misinfoCount,
+        isShorts: isShorts ? "true" : "false"
+      });
     }
     const videoElement = await waitForVideoElement(5e3);
     if (!videoElement || activeVideoId !== videoId) return;

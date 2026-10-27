@@ -5,6 +5,7 @@
 
 import { DEFAULT_SETTINGS, STORAGE_KEYS } from './storage.js';
 import { fetchClaimsFromBackend, DEFAULT_PROD_ENDPOINT } from './claim-service.js';
+import { trackEvent } from './analytics.js';
 
 /**
  * Synchronizes and migrates extension settings in chrome.storage.local.
@@ -34,18 +35,29 @@ function syncSettings() {
 }
 
 if (typeof chrome !== 'undefined' && chrome.runtime) {
-  chrome.runtime.onInstalled.addListener(() => {
+  chrome.runtime.onInstalled.addListener((details) => {
     syncSettings();
+    trackEvent('extension_installed', {
+      reason: details?.reason || 'install',
+      version: '1.0.1'
+    });
   });
 
   if (chrome.runtime.onStartup) {
     chrome.runtime.onStartup.addListener(() => {
       syncSettings();
+      trackEvent('extension_startup');
     });
   }
 
-  // Handle cross-origin fetch requests dispatched from content script
+  // Handle cross-origin fetch requests and analytics dispatched from content script
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request && request.action === 'TRACK_ANALYTICS_EVENT' && request.eventName) {
+      trackEvent(request.eventName, request.eventParams || {});
+      sendResponse({ success: true });
+      return true;
+    }
+
     if (request && request.action === 'FETCH_CLAIMS' && request.videoId) {
       const rawEndpoint = request.endpoint || DEFAULT_PROD_ENDPOINT;
       const endpoint = rawEndpoint.includes('exampleapi.com') ? DEFAULT_PROD_ENDPOINT : rawEndpoint;

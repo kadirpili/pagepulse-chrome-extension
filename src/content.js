@@ -10,6 +10,7 @@ import { findActiveClaim, seekToTimestamp, isAdActive, waitForVideoElement } fro
 import { OverlayManager } from './overlay-manager.js';
 import { DrawerManager } from './drawer-manager.js';
 import { getSettings, onSettingsChanged } from './storage.js';
+import { trackEvent } from './analytics.js';
 
 let activeVideoId = null;
 let currentClaims = [];
@@ -243,6 +244,7 @@ async function startVideoSession(videoId) {
   overlayManager = new OverlayManager();
   overlayManager.mount();
   overlayManager.onViewTimeline(() => {
+    trackEvent('timeline_opened_from_overlay', { videoId: activeVideoId });
     if (drawerManager) {
       drawerManager.open();
     }
@@ -251,6 +253,7 @@ async function startVideoSession(videoId) {
   drawerManager = new DrawerManager();
   drawerManager.mount();
   drawerManager.onSeek((targetTime) => {
+    trackEvent('timeline_seek_clicked', { videoId: activeVideoId, targetTime });
     if (activeVideoElement) {
       seekToTimestamp(activeVideoElement, targetTime);
       if (overlayManager) {
@@ -291,6 +294,22 @@ async function startVideoSession(videoId) {
       drawerManager.setFilter(currentSettings.filterVerdict);
     }
     mountStatusIndicator(videoId, currentClaims.length);
+
+    const isShorts =
+      typeof window !== 'undefined' &&
+      window.location &&
+      typeof window.location.pathname === 'string' &&
+      window.location.pathname.startsWith('/shorts');
+    const misinfoCount = currentClaims.filter(
+      (c) => c.verdict === 'misinformation' || (typeof c.score === 'number' && c.score >= 2)
+    ).length;
+
+    trackEvent('video_factchecked', {
+      videoId,
+      totalClaims: currentClaims.length,
+      misinfoCount,
+      isShorts: isShorts ? 'true' : 'false',
+    });
   }
 
   const videoElement = await waitForVideoElement(5000);
