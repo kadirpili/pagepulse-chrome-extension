@@ -1,6 +1,6 @@
 {
   "name": "youtube-misinformation-detector",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Manifest V3 Chrome Extension detecting real-time misinformation on YouTube videos with interactive timeline drawer",
   "main": "src/background.js",
   "type": "module",

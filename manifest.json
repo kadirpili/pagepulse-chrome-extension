@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "YouTube Misinformation Detector",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Real-time misinformation warnings, claim tracking, and interactive timeline drawer for YouTube videos.",
   "permissions": [
     "storage",
