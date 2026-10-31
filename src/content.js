@@ -153,7 +153,7 @@ async function handleNavigation() {
 }
 
 function activeSessionValid() {
-  return Boolean(activeVideoElement && overlayManager && drawerManager);
+  return Boolean(activeVideoElement && overlayManager);
 }
 
 /**
@@ -219,13 +219,35 @@ async function reloadClaimsForActiveVideo() {
   const apiState = getApiState(activeVideoId);
   if (apiState.status === 'error' && currentClaims.length === 0) {
     if (drawerManager) {
-      drawerManager.setError(apiState.error || 'Failed to retrieve analysis from backend service.', () => reloadClaimsForActiveVideo());
+      drawerManager.destroy();
+      drawerManager = null;
     }
+    const existingDrawer = document.getElementById('yt-misinfo-drawer-root');
+    if (existingDrawer) existingDrawer.remove();
     mountStatusIndicator(activeVideoId, 'error', apiState.error);
-  } else {
+  } else if (currentClaims.length === 0) {
     if (drawerManager) {
-      drawerManager.setClaims(currentClaims);
+      drawerManager.destroy();
+      drawerManager = null;
     }
+    const existingDrawer = document.getElementById('yt-misinfo-drawer-root');
+    if (existingDrawer) existingDrawer.remove();
+    mountStatusIndicator(activeVideoId, 0);
+  } else {
+    if (!drawerManager) {
+      drawerManager = new DrawerManager();
+      drawerManager.mount();
+      drawerManager.onSeek((targetTime) => {
+        trackEvent('timeline_seek_clicked', { videoId: activeVideoId, targetTime });
+        if (activeVideoElement) {
+          seekToTimestamp(activeVideoElement, targetTime);
+          if (overlayManager) {
+            overlayManager.resetDismissed();
+          }
+        }
+      });
+    }
+    drawerManager.setClaims(currentClaims);
     mountStatusIndicator(activeVideoId, currentClaims.length);
   }
 }
@@ -245,7 +267,7 @@ async function startVideoSession(videoId) {
   overlayManager.mount();
   overlayManager.onViewTimeline(() => {
     trackEvent('timeline_opened_from_overlay', { videoId: activeVideoId });
-    if (drawerManager) {
+    if (drawerManager && currentClaims && currentClaims.length > 0) {
       drawerManager.open();
     }
   });
@@ -286,9 +308,35 @@ async function startVideoSession(videoId) {
 
   const apiState = getApiState(videoId);
   if (apiState.status === 'error' && currentClaims.length === 0) {
-    drawerManager.setError(apiState.error || 'Failed to retrieve analysis from backend service.', () => reloadClaimsForActiveVideo());
+    if (drawerManager) {
+      drawerManager.destroy();
+      drawerManager = null;
+    }
+    const existingDrawer = document.getElementById('yt-misinfo-drawer-root');
+    if (existingDrawer) existingDrawer.remove();
     mountStatusIndicator(videoId, 'error', apiState.error);
+  } else if (currentClaims.length === 0) {
+    if (drawerManager) {
+      drawerManager.destroy();
+      drawerManager = null;
+    }
+    const existingDrawer = document.getElementById('yt-misinfo-drawer-root');
+    if (existingDrawer) existingDrawer.remove();
+    mountStatusIndicator(videoId, 0);
   } else {
+    if (!drawerManager) {
+      drawerManager = new DrawerManager();
+      drawerManager.mount();
+      drawerManager.onSeek((targetTime) => {
+        trackEvent('timeline_seek_clicked', { videoId: activeVideoId, targetTime });
+        if (activeVideoElement) {
+          seekToTimestamp(activeVideoElement, targetTime);
+          if (overlayManager) {
+            overlayManager.resetDismissed();
+          }
+        }
+      });
+    }
     drawerManager.setClaims(currentClaims);
     if (currentSettings.filterVerdict) {
       drawerManager.setFilter(currentSettings.filterVerdict);
@@ -363,7 +411,9 @@ function mountStatusIndicator(videoId, countOrStatus, errorMessage = '') {
     `;
     indicator.title = 'Click to open claims timeline drawer';
     indicator.addEventListener('click', () => {
-      if (drawerManager) drawerManager.open();
+      if (drawerManager && currentClaims && currentClaims.length > 0) {
+        drawerManager.open();
+      }
     });
     document.body.appendChild(indicator);
   } else {

@@ -575,6 +575,31 @@ test('dom-components: OverlayManager & DrawerManager Class APIs', async (t) => {
 
     dm.destroy();
   });
+
+  await t.test('DrawerManager removes/hides drawer on the right when claims are empty', () => {
+    const dm = new DrawerManager();
+    dm.mount(mockDoc.body);
+
+    // Initial populate with claims
+    dm.setClaims(sampleDrawerClaims);
+    assert.equal(dm.root.classList.contains('yt-misinfo-hidden'), false);
+    assert.notEqual(dm.root.style.display, 'none');
+
+    // Setting claims to empty removes/hides the drawer from the right
+    dm.setClaims([]);
+    assert.equal(dm.claims.length, 0);
+    assert.equal(dm.isOpen(), false);
+    assert.equal(dm.root.classList.contains('yt-misinfo-hidden'), true);
+    assert.equal(dm.root.style.display, 'none');
+
+    // Re-populating with claims unhides drawer
+    dm.setClaims(sampleDrawerClaims);
+    assert.equal(dm.claims.length, 3);
+    assert.equal(dm.root.classList.contains('yt-misinfo-hidden'), false);
+    assert.notEqual(dm.root.style.display, 'none');
+
+    dm.destroy();
+  });
 });
 
 test('dom-components: Security & XSS Sanitization', async (t) => {

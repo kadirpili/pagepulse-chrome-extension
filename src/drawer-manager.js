@@ -84,6 +84,8 @@ export function createDrawer(claims = [], options = {}) {
   cardsList.setAttribute('role', 'list');
 
   if (sorted.length === 0) {
+    drawer.classList.add('yt-misinfo-hidden');
+    drawer.style.display = 'none';
     const emptyState = document.createElement('div');
     emptyState.className = 'yt-misinfo-empty-state';
     emptyState.style.cssText = 'padding: 36px 16px; text-align: center; color: #888; font-size: 13px; line-height: 1.6;';
@@ -464,6 +466,10 @@ export class DrawerManager {
   setLoading(message = 'Analyzing video transcript and fact-checking claims with AI...') {
     this.isLoading = true;
     this.errorMessage = null;
+    if (this.root) {
+      this.root.classList.remove('yt-misinfo-hidden');
+      this.root.style.display = '';
+    }
     this._updateCounters();
 
     if (this.emptyStateElement) {
@@ -508,6 +514,10 @@ export class DrawerManager {
   setError(errorMessage, onRetry) {
     this.isLoading = false;
     this.errorMessage = errorMessage;
+    if (this.root) {
+      this.root.classList.remove('yt-misinfo-hidden');
+      this.root.style.display = '';
+    }
     this._updateCounters();
 
     if (this.emptyStateElement) {
@@ -561,13 +571,28 @@ export class DrawerManager {
 
   /**
    * Sets the claims array and re-renders the chronological cards.
+   * If claims are empty, automatically closes and removes/hides the drawer from the right.
    * @param {Array<Object>} [claims=[]]
    */
   setClaims(claims = []) {
     this.isLoading = false;
     this.errorMessage = null;
-    this.claims = [...claims].sort((a, b) => a.timestamp - b.timestamp);
+    this.claims = Array.isArray(claims) ? [...claims].sort((a, b) => a.timestamp - b.timestamp) : [];
     this._updateCounters();
+
+    if (this.claims.length === 0) {
+      this.close();
+      if (this.root) {
+        this.root.classList.add('yt-misinfo-hidden');
+        this.root.style.display = 'none';
+      }
+      return;
+    }
+
+    if (this.root) {
+      this.root.classList.remove('yt-misinfo-hidden');
+      this.root.style.display = '';
+    }
     this.render();
   }
 
@@ -779,6 +804,10 @@ export class DrawerManager {
 
   open() {
     this.isOpenState = true;
+    if (this.root && this.claims.length > 0) {
+      this.root.classList.remove('yt-misinfo-hidden');
+      this.root.style.display = '';
+    }
     if (this.panelElement) {
       this.panelElement.classList.remove('yt-misinfo-drawer-panel--collapsed', 'is-collapsed');
       this.panelElement.setAttribute('aria-expanded', 'true');
@@ -793,6 +822,21 @@ export class DrawerManager {
     if (this.panelElement) {
       this.panelElement.classList.add('yt-misinfo-drawer-panel--collapsed', 'is-collapsed');
       this.panelElement.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  hide() {
+    this.close();
+    if (this.root) {
+      this.root.classList.add('yt-misinfo-hidden');
+      this.root.style.display = 'none';
+    }
+  }
+
+  show() {
+    if (this.root && this.claims && this.claims.length > 0) {
+      this.root.classList.remove('yt-misinfo-hidden');
+      this.root.style.display = '';
     }
   }
 

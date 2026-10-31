@@ -1924,6 +1924,10 @@
     setLoading(message = "Analyzing video transcript and fact-checking claims with AI...") {
       this.isLoading = true;
       this.errorMessage = null;
+      if (this.root) {
+        this.root.classList.remove("yt-misinfo-hidden");
+        this.root.style.display = "";
+      }
       this._updateCounters();
       if (this.emptyStateElement) {
         this.emptyStateElement.classList.add("yt-misinfo-hidden");
@@ -1960,6 +1964,10 @@
     setError(errorMessage, onRetry) {
       this.isLoading = false;
       this.errorMessage = errorMessage;
+      if (this.root) {
+        this.root.classList.remove("yt-misinfo-hidden");
+        this.root.style.display = "";
+      }
       this._updateCounters();
       if (this.emptyStateElement) {
         this.emptyStateElement.classList.add("yt-misinfo-hidden");
@@ -2003,13 +2011,26 @@
     }
     /**
      * Sets the claims array and re-renders the chronological cards.
+     * If claims are empty, automatically closes and removes/hides the drawer from the right.
      * @param {Array<Object>} [claims=[]]
      */
     setClaims(claims = []) {
       this.isLoading = false;
       this.errorMessage = null;
-      this.claims = [...claims].sort((a, b) => a.timestamp - b.timestamp);
+      this.claims = Array.isArray(claims) ? [...claims].sort((a, b) => a.timestamp - b.timestamp) : [];
       this._updateCounters();
+      if (this.claims.length === 0) {
+        this.close();
+        if (this.root) {
+          this.root.classList.add("yt-misinfo-hidden");
+          this.root.style.display = "none";
+        }
+        return;
+      }
+      if (this.root) {
+        this.root.classList.remove("yt-misinfo-hidden");
+        this.root.style.display = "";
+      }
       this.render();
     }
     _updateCounters() {
@@ -2182,6 +2203,10 @@
     }
     open() {
       this.isOpenState = true;
+      if (this.root && this.claims.length > 0) {
+        this.root.classList.remove("yt-misinfo-hidden");
+        this.root.style.display = "";
+      }
       if (this.panelElement) {
         this.panelElement.classList.remove("yt-misinfo-drawer-panel--collapsed", "is-collapsed");
         this.panelElement.setAttribute("aria-expanded", "true");
@@ -2195,6 +2220,19 @@
       if (this.panelElement) {
         this.panelElement.classList.add("yt-misinfo-drawer-panel--collapsed", "is-collapsed");
         this.panelElement.setAttribute("aria-expanded", "false");
+      }
+    }
+    hide() {
+      this.close();
+      if (this.root) {
+        this.root.classList.add("yt-misinfo-hidden");
+        this.root.style.display = "none";
+      }
+    }
+    show() {
+      if (this.root && this.claims && this.claims.length > 0) {
+        this.root.classList.remove("yt-misinfo-hidden");
+        this.root.style.display = "";
       }
     }
     toggle() {
@@ -2467,7 +2505,7 @@
     await startVideoSession(videoId);
   }
   function activeSessionValid() {
-    return Boolean(activeVideoElement && overlayManager && drawerManager);
+    return Boolean(activeVideoElement && overlayManager);
   }
   function teardownSession() {
     if (activeVideoElement) {
@@ -2518,13 +2556,35 @@
     const apiState = getApiState(activeVideoId);
     if (apiState.status === "error" && currentClaims.length === 0) {
       if (drawerManager) {
-        drawerManager.setError(apiState.error || "Failed to retrieve analysis from backend service.", () => reloadClaimsForActiveVideo());
+        drawerManager.destroy();
+        drawerManager = null;
       }
+      const existingDrawer = document.getElementById("yt-misinfo-drawer-root");
+      if (existingDrawer) existingDrawer.remove();
       mountStatusIndicator(activeVideoId, "error", apiState.error);
-    } else {
+    } else if (currentClaims.length === 0) {
       if (drawerManager) {
-        drawerManager.setClaims(currentClaims);
+        drawerManager.destroy();
+        drawerManager = null;
       }
+      const existingDrawer = document.getElementById("yt-misinfo-drawer-root");
+      if (existingDrawer) existingDrawer.remove();
+      mountStatusIndicator(activeVideoId, 0);
+    } else {
+      if (!drawerManager) {
+        drawerManager = new DrawerManager();
+        drawerManager.mount();
+        drawerManager.onSeek((targetTime) => {
+          trackEvent("timeline_seek_clicked", { videoId: activeVideoId, targetTime });
+          if (activeVideoElement) {
+            seekToTimestamp(activeVideoElement, targetTime);
+            if (overlayManager) {
+              overlayManager.resetDismissed();
+            }
+          }
+        });
+      }
+      drawerManager.setClaims(currentClaims);
       mountStatusIndicator(activeVideoId, currentClaims.length);
     }
   }
@@ -2536,7 +2596,7 @@
     overlayManager.mount();
     overlayManager.onViewTimeline(() => {
       trackEvent("timeline_opened_from_overlay", { videoId: activeVideoId });
-      if (drawerManager) {
+      if (drawerManager && currentClaims && currentClaims.length > 0) {
         drawerManager.open();
       }
     });
@@ -2568,9 +2628,35 @@
     if (activeVideoId !== videoId) return;
     const apiState = getApiState(videoId);
     if (apiState.status === "error" && currentClaims.length === 0) {
-      drawerManager.setError(apiState.error || "Failed to retrieve analysis from backend service.", () => reloadClaimsForActiveVideo());
+      if (drawerManager) {
+        drawerManager.destroy();
+        drawerManager = null;
+      }
+      const existingDrawer = document.getElementById("yt-misinfo-drawer-root");
+      if (existingDrawer) existingDrawer.remove();
       mountStatusIndicator(videoId, "error", apiState.error);
+    } else if (currentClaims.length === 0) {
+      if (drawerManager) {
+        drawerManager.destroy();
+        drawerManager = null;
+      }
+      const existingDrawer = document.getElementById("yt-misinfo-drawer-root");
+      if (existingDrawer) existingDrawer.remove();
+      mountStatusIndicator(videoId, 0);
     } else {
+      if (!drawerManager) {
+        drawerManager = new DrawerManager();
+        drawerManager.mount();
+        drawerManager.onSeek((targetTime) => {
+          trackEvent("timeline_seek_clicked", { videoId: activeVideoId, targetTime });
+          if (activeVideoElement) {
+            seekToTimestamp(activeVideoElement, targetTime);
+            if (overlayManager) {
+              overlayManager.resetDismissed();
+            }
+          }
+        });
+      }
       drawerManager.setClaims(currentClaims);
       if (currentSettings.filterVerdict) {
         drawerManager.setFilter(currentSettings.filterVerdict);
@@ -2623,7 +2709,9 @@
     `;
       indicator.title = "Click to open claims timeline drawer";
       indicator.addEventListener("click", () => {
-        if (drawerManager) drawerManager.open();
+        if (drawerManager && currentClaims && currentClaims.length > 0) {
+          drawerManager.open();
+        }
       });
       document.body.appendChild(indicator);
     } else {
